@@ -1,0 +1,63 @@
+{
+  "name": "adapta-ia-be",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "worker:dev": "tsx watch src/worker.ts",
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "worker": "node dist/worker.js",
+    "test": "jest",
+    "test:changed": "jest --changedSince=origin/main",
+    "lint": "eslint src --ext .ts",
+    "format": "prettier --write .",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:generate": "prisma generate",
+    "db:studio": "prisma studio",
+    "prepare": "husky || true"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "11.11.0",
+      "onFail": "download"
+    }
+  },
+  "type": "module",
+  "dependencies": {
+    "@prisma/client": "^7.8.0",
+    "bcrypt": "^6.0.0",
+    "bullmq": "^5.79.3",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "helmet": "^8.2.0",
+    "ioredis": "^5.11.1",
+    "jsonwebtoken": "^9.0.3",
+    "nodemailer": "^9.0.3",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^26.1.1",
+    "@types/nodemailer": "^8.0.1",
+    "@typescript-eslint/eslint-plugin": "^8.63.0",
+    "@typescript-eslint/parser": "^8.63.0",
+    "eslint": "^10.6.0",
+    "husky": "^9.1.7",
+    "jest": "^30.4.2",
+    "lint-staged": "^17.0.8",
+    "prettier": "^3.9.4",
+    "prisma": "^7.8.0",
+    "ts-jest": "^29.4.11",
+    "tsx": "^4.23.0",
+    "typescript": "^7.0.2"
+  }
+}

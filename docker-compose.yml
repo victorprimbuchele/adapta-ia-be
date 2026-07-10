@@ -1,0 +1,70 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: adapta
+      POSTGRES_PASSWORD: adapta
+      POSTGRES_DB: adapta_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U adapta -d adapta_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: pnpm run dev
+    ports:
+      - "3000:3000"
+    env_file: .env
+    environment:
+      CI: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - api_node_modules:/app/node_modules
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: pnpm run worker:dev
+    env_file: .env
+    environment:
+      CI: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - worker_node_modules:/app/node_modules
+
+volumes:
+  postgres_data:
+  redis_data:
+  api_node_modules:
+  worker_node_modules:
