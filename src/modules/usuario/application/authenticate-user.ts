@@ -26,6 +26,6 @@ export class AuthenticateUser {
       throw new InvalidCredentialsError();
     }
 
-    return user;
+    return this.userRepository.updateLastLoginAt(user.id, new Date());
   }
 }
