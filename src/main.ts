@@ -1,6 +1,8 @@
 import express from "express";
 
 import { errorHandler } from "./shared/http/error-handler.js";
+import { gradeRouter } from "./modules/escola/adapters/http/grade.routes.js";
+import { schoolRouter } from "./modules/escola/adapters/http/school.routes.js";
 import { authRouter } from "./modules/usuario/adapters/http/auth.routes.js";
 import { userRouter } from "./modules/usuario/adapters/http/user.routes.js";
 
@@ -17,6 +19,8 @@ app.get(`${API_PREFIX}/health`, (req, res) => {
 
 app.use(`${API_PREFIX}/users`, userRouter);
 app.use(`${API_PREFIX}/auth`, authRouter);
+app.use(`${API_PREFIX}/escolas`, schoolRouter);
+app.use(`${API_PREFIX}/series`, gradeRouter);
 
 app.use(errorHandler);
 
