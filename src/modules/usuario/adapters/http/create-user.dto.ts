@@ -13,7 +13,19 @@ export const createUserSchema = z.object({
   password: z
     .string({ error: "Senha é obrigatória." })
     .min(8, "Senha deve ter pelo menos 8 caracteres.")
-    .max(72, "Senha deve ter no máximo 72 caracteres."),
+    .max(72, "Senha deve ter no máximo 72 caracteres.")
+    .refine(
+      (password) => /[a-z]/.test(password),
+      "Senha deve conter ao menos uma letra minúscula.",
+    )
+    .refine(
+      (password) => /[A-Z]/.test(password),
+      "Senha deve conter ao menos uma letra maiúscula.",
+    )
+    .refine(
+      (password) => /[0-9]/.test(password),
+      "Senha deve conter ao menos um número.",
+    ),
 });
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;
