@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 
-import { EmailAlreadyInUseError } from "../domain/errors.js";
+import { EmailAlreadyInUseError, WeakPasswordError } from "../domain/errors.js";
+import { getWeakPasswordReasons } from "../domain/password-policy.js";
 import type { User } from "../domain/user.js";
 import type { UserRepository } from "../ports/user-repository.js";
 
@@ -16,6 +17,11 @@ export class RegisterUser {
   constructor(private readonly userRepository: UserRepository) {}
 
   async execute(input: RegisterUserInput): Promise<User> {
+    const weakPasswordReasons = getWeakPasswordReasons(input.password);
+    if (weakPasswordReasons.length > 0) {
+      throw new WeakPasswordError(weakPasswordReasons);
+    }
+
     const existingUser = await this.userRepository.findByEmail(input.email);
     if (existingUser) {
       throw new EmailAlreadyInUseError(input.email);
