@@ -38,7 +38,7 @@
 
 **Contexto**: A equipe quer entregar rápido para o hackathon, mas deixar o caminho aberto para extrair módulos como microsserviços no futuro (ex.: módulo de geração de áudio/TTS, ou de simplificação de texto via LLM), sem reescrever regra de negócio.
 
-**Decisão**: Adotar um monolito modular, organizado por módulos de domínio (ex.: `material`, `adaptacao`, `usuario`, `relatorio`), cada um internamente estruturado em camadas hexagonais:
+**Decisão**: Adotar um monolito modular, organizado por módulos de domínio (ex.: `material`, `adaptacao`, `user`, `relatorio`), cada um internamente estruturado em camadas hexagonais:
 - **Domain**: entidades, regras de negócio puras, sem dependência de framework.
 - **Application**: casos de uso (use cases), orquestram o domínio via portas (interfaces).
 - **Ports**: interfaces que definem contratos (ex.: `TextSimplifierPort`, `AudioGeneratorPort`, `MaterialRepositoryPort`).
@@ -250,6 +250,6 @@ Cada módulo só se comunica com outro através de uma interface de aplicação 
 ## Resumo de pendências relacionadas a estas decisões
 
 - [ ] Definir e documentar o contrato de API (OpenAPI/Swagger ou doc manual) dado que back e front estão em repositórios separados (ADR 010, 011).
-- [ ] Decidir nome dos módulos de domínio do monólito modular (ADR 003) - provavelmente: `material`, `adaptacao`, `usuario`, `relatorio`.
+- [ ] Decidir nome dos módulos de domínio do monólito modular (ADR 003) - provavelmente: `material`, `adaptacao`, `user`, `relatorio`.
 - [ ] Validar limite de 500 e-mails/dia do Gmail SMTP (ADR 007) contra o volume esperado de demo.
 - [ ] Avaliar, quando o mobile entrar em escopo, a abordagem de estilização equivalente ao Tailwind (ex.: NativeWind) - novo ADR.
