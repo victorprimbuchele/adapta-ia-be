@@ -15,3 +15,13 @@ export class InvalidCredentialsError extends AppError {
     super("E-mail ou senha inválidos.", 401, "INVALID_CREDENTIALS");
   }
 }
+
+/**
+ * Usuário identificado por um token válido mas que não existe mais na base
+ * (ex.: removido após o token ter sido emitido).
+ */
+export class UserNotFoundError extends AppError {
+  constructor() {
+    super("Usuário não encontrado.", 404, "USER_NOT_FOUND");
+  }
+}

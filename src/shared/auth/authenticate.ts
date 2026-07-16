@@ -57,3 +57,16 @@ export function authenticate(
 
   next();
 }
+
+/**
+ * Obtém o payload do usuário autenticado a partir de `req.user`, populado
+ * pelo middleware `authenticate`. Deve ser usado apenas em handlers de rotas
+ * já protegidas por `authenticate`; caso contrário, lança `MissingTokenError`.
+ */
+export function getAuthenticatedUser(req: Request): AccessTokenPayload {
+  if (!req.user) {
+    throw new MissingTokenError();
+  }
+
+  return req.user;
+}
