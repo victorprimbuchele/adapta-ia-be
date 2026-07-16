@@ -23,3 +23,29 @@ model User {
 
   @@map("users")
 }
+
+/// Dado de referência fixo (sem cadastro dinâmico no MVP — ver Épico 2).
+/// Populado via seed (`prisma/seed.ts`).
+model School {
+  id        String   @id @default(cuid())
+  name      String
+  city      String
+  state     String   @map("state")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("schools")
+}
+
+/// Dado de referência fixo (sem cadastro dinâmico no MVP — ver Épico 2).
+/// Populado via seed (`prisma/seed.ts`). `sortOrder` define a ordem de
+/// exibição nas listagens (ex.: do 1º ano ao 9º ano).
+model Grade {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  sortOrder Int      @unique @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("grades")
+}

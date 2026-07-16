@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { TokenExpiredError } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 
 import { ExpiredTokenError, InvalidTokenError, MissingTokenError } from "./errors.js";
 import { verifyAccessToken, type AccessTokenPayload } from "./jwt.js";
@@ -47,7 +47,7 @@ export function authenticate(
       next(error);
       return;
     }
-    if (error instanceof TokenExpiredError) {
+    if (error instanceof jwt.TokenExpiredError) {
       next(new ExpiredTokenError());
       return;
     }
