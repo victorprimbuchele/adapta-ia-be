@@ -7,6 +7,7 @@ export interface CreateUserData {
 }
 
 export interface UserRepository {
+  findById(id: string): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;
   create(data: CreateUserData): Promise<User>;
   updateLastLoginAt(userId: string, date: Date): Promise<User>;
