@@ -1,6 +1,7 @@
 import express from "express";
 
 import { errorHandler } from "./shared/http/error-handler.js";
+import { authRouter } from "./modules/usuario/adapters/http/auth.routes.js";
 import { userRouter } from "./modules/usuario/adapters/http/user.routes.js";
 
 const PORT = process.env["PORT"] ?? 3000;
@@ -15,6 +16,7 @@ app.get(`${API_PREFIX}/health`, (req, res) => {
 });
 
 app.use(`${API_PREFIX}/users`, userRouter);
+app.use(`${API_PREFIX}/auth`, authRouter);
 
 app.use(errorHandler);
 
