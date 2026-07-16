@@ -14,8 +14,11 @@ export interface AccessTokenPayload {
   email: string;
 }
 
-export function signAccessToken(payload: AccessTokenPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+export function signAccessToken(
+  payload: AccessTokenPayload,
+  expiresIn: SignOptions["expiresIn"] = JWT_EXPIRES_IN,
+): string {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn });
 }
 
 export function verifyAccessToken(token: string): AccessTokenPayload {
