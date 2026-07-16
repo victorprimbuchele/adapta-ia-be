@@ -12,4 +12,11 @@ export class PrismaUserRepository implements UserRepository {
   async create(data: CreateUserData): Promise<User> {
     return this.prisma.user.create({ data });
   }
+
+  async updateLastLoginAt(userId: string, date: Date): Promise<User> {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { lastLoginAt: date },
+    });
+  }
 }

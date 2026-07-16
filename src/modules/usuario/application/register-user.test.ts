@@ -25,6 +25,15 @@ class InMemoryUserRepository implements UserRepository {
     this.users.push(user);
     return user;
   }
+
+  async updateLastLoginAt(userId: string, date: Date): Promise<User> {
+    const user = this.users.find((candidate) => candidate.id === userId);
+    if (!user) {
+      throw new Error(`Usuário "${userId}" não encontrado.`);
+    }
+    user.lastLoginAt = date;
+    return user;
+  }
 }
 
 describe("RegisterUser", () => {

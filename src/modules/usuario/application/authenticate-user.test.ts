@@ -25,6 +25,15 @@ class InMemoryUserRepository implements UserRepository {
     this.users.push(user);
     return user;
   }
+
+  async updateLastLoginAt(userId: string, date: Date): Promise<User> {
+    const user = this.users.find((candidate) => candidate.id === userId);
+    if (!user) {
+      throw new Error(`Usuário "${userId}" não encontrado.`);
+    }
+    user.lastLoginAt = date;
+    return user;
+  }
 }
 
 async function seedUser(
@@ -48,6 +57,63 @@ describe("AuthenticateUser", () => {
     });
 
     expect(user.email).toBe("marta@escola.com");
+  });
+
+  it("atualiza lastLoginAt a cada login bem-sucedido", async () => {
+    const repository = new InMemoryUserRepository();
+    await seedUser(repository, "marta@escola.com", "senha-correta-123");
+    const authenticateUser = new AuthenticateUser(repository);
+
+    const userBeforeLogin = await repository.findByEmail("marta@escola.com");
+    expect(userBeforeLogin?.lastLoginAt).toBeNull();
+
+    const beforeLogin = new Date();
+    const user = await authenticateUser.execute({
+      email: "marta@escola.com",
+      password: "senha-correta-123",
+    });
+    const afterLogin = new Date();
+
+    expect(user.lastLoginAt).not.toBeNull();
+    expect(user.lastLoginAt!.getTime()).toBeGreaterThanOrEqual(beforeLogin.getTime());
+    expect(user.lastLoginAt!.getTime()).toBeLessThanOrEqual(afterLogin.getTime());
+
+    const persistedUser = await repository.findByEmail("marta@escola.com");
+    expect(persistedUser?.lastLoginAt).toEqual(user.lastLoginAt);
+  });
+
+  it("chama updateLastLoginAt a cada novo login bem-sucedido, não apenas no primeiro", async () => {
+    const repository = new InMemoryUserRepository();
+    await seedUser(repository, "marta@escola.com", "senha-correta-123");
+    const authenticateUser = new AuthenticateUser(repository);
+    const updateLastLoginAtSpy = jest.spyOn(repository, "updateLastLoginAt");
+
+    await authenticateUser.execute({
+      email: "marta@escola.com",
+      password: "senha-correta-123",
+    });
+    await authenticateUser.execute({
+      email: "marta@escola.com",
+      password: "senha-correta-123",
+    });
+
+    expect(updateLastLoginAtSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it("não atualiza lastLoginAt quando a senha está incorreta", async () => {
+    const repository = new InMemoryUserRepository();
+    await seedUser(repository, "marta@escola.com", "senha-correta-123");
+    const authenticateUser = new AuthenticateUser(repository);
+
+    await expect(
+      authenticateUser.execute({
+        email: "marta@escola.com",
+        password: "senha-errada",
+      }),
+    ).rejects.toBeInstanceOf(InvalidCredentialsError);
+
+    const user = await repository.findByEmail("marta@escola.com");
+    expect(user?.lastLoginAt).toBeNull();
   });
 
   it("rejeita com erro genérico quando a senha está incorreta", async () => {
