@@ -1,5 +1,14 @@
 import { z } from "zod";
 
+import {
+  hasDigit,
+  hasLowercaseLetter,
+  hasUppercaseLetter,
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_POLICY_MESSAGES,
+} from "../../domain/password-policy.js";
+
 export const createUserSchema = z.object({
   name: z
     .string({ error: "Nome é obrigatório." })
@@ -12,20 +21,11 @@ export const createUserSchema = z.object({
     .toLowerCase(),
   password: z
     .string({ error: "Senha é obrigatória." })
-    .min(8, "Senha deve ter pelo menos 8 caracteres.")
-    .max(72, "Senha deve ter no máximo 72 caracteres.")
-    .refine(
-      (password) => /[a-z]/.test(password),
-      "Senha deve conter ao menos uma letra minúscula.",
-    )
-    .refine(
-      (password) => /[A-Z]/.test(password),
-      "Senha deve conter ao menos uma letra maiúscula.",
-    )
-    .refine(
-      (password) => /[0-9]/.test(password),
-      "Senha deve conter ao menos um número.",
-    ),
+    .min(PASSWORD_MIN_LENGTH, PASSWORD_POLICY_MESSAGES.minLength)
+    .max(PASSWORD_MAX_LENGTH, PASSWORD_POLICY_MESSAGES.maxLength)
+    .refine(hasLowercaseLetter, PASSWORD_POLICY_MESSAGES.lowercase)
+    .refine(hasUppercaseLetter, PASSWORD_POLICY_MESSAGES.uppercase)
+    .refine(hasDigit, PASSWORD_POLICY_MESSAGES.number),
 });
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;
