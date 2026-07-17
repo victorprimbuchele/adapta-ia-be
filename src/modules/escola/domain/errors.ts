@@ -53,3 +53,17 @@ export class ClassAccessDeniedError extends AppError {
     );
   }
 }
+
+/**
+ * Aluno (identificado por e-mail) já está vinculado a esta turma. Evita
+ * vinculações duplicadas via `UserClass` (ver Épico 3, BE-E3.1).
+ */
+export class StudentAlreadyEnrolledError extends AppError {
+  constructor(email: string) {
+    super(
+      `O aluno "${email}" já está vinculado a esta turma.`,
+      409,
+      "STUDENT_ALREADY_ENROLLED",
+    );
+  }
+}

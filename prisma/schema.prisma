@@ -21,7 +21,8 @@ model User {
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
-  classes Class[]
+  classes     Class[]
+  userClasses UserClass[]
 
   @@map("users")
 }
@@ -73,8 +74,31 @@ model Class {
   grade   Grade  @relation(fields: [gradeId], references: [id])
   teacher User   @relation(fields: [teacherId], references: [id])
 
+  enrollments UserClass[]
+
   @@index([schoolId])
   @@index([gradeId])
   @@index([teacherId])
   @@map("classes")
+}
+
+/// Vinculação de um aluno (`User`) a uma turma (`Class`) — ver Épico 3,
+/// BE-E3.1. Aluno é, do ponto de vista do domínio de autenticação, um
+/// `User` como qualquer outro; `UserClass` é a tabela de junção N:N entre
+/// alunos e turmas (um aluno pode estar em mais de uma turma).
+model UserClass {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  classId   String   @map("class_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user  User  @relation(fields: [userId], references: [id])
+  class Class @relation(fields: [classId], references: [id])
+
+  /// Um mesmo aluno nunca é vinculado duas vezes à mesma turma.
+  @@unique([userId, classId])
+  @@index([userId])
+  @@index([classId])
+  @@map("user_classes")
 }

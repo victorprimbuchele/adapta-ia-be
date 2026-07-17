@@ -1,3 +1,5 @@
+import type { Student } from "./student.js";
+
 /**
  * Turma — vinculada a uma escola e a uma série de referência, com o
  * professor responsável sendo sempre o usuário autenticado que a criou
@@ -15,15 +17,9 @@ export interface Class {
 }
 
 /**
- * Aluno vinculado a uma turma. A vinculação (`UserClass`) ainda não existe
- * no MVP — ver Épico 3 — por isso `ClassDetail.students` está sempre vazio
- * até essa funcionalidade ser implementada.
+ * Aluno vinculado a uma turma (`UserClass` — ver Épico 3, BE-E3.1).
  */
-export interface ClassStudent {
-  id: string;
-  name: string;
-  email: string;
-}
+export type ClassStudent = Student;
 
 /**
  * Detalhe de turma (ver Épico 2, BE-E2.5), incluindo os alunos vinculados.
