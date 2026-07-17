@@ -67,3 +67,26 @@ export class StudentAlreadyEnrolledError extends AppError {
     );
   }
 }
+
+/**
+ * Aluno informado não existe (ver Épico 3, BE-E3.2).
+ */
+export class StudentNotFoundError extends AppError {
+  constructor(studentId: string) {
+    super(`Aluno "${studentId}" não encontrado.`, 404, "STUDENT_NOT_FOUND");
+  }
+}
+
+/**
+ * Perfil de aprendizagem informado não existe no catálogo de referência
+ * (ver Épico 3, BE-E3.2).
+ */
+export class LearningProfileNotFoundError extends AppError {
+  constructor(learningProfileId: string) {
+    super(
+      `Perfil de aprendizagem "${learningProfileId}" não encontrado.`,
+      404,
+      "LEARNING_PROFILE_NOT_FOUND",
+    );
+  }
+}

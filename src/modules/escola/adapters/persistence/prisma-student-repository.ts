@@ -24,6 +24,13 @@ const SALT_ROUNDS = 10;
 export class PrismaStudentRepository implements StudentRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
+  async findById(id: string): Promise<Student | null> {
+    return this.prisma.user.findUnique({
+      where: { id },
+      select: { id: true, name: true, email: true },
+    });
+  }
+
   async findByEmail(email: string): Promise<Student | null> {
     return this.prisma.user.findUnique({
       where: { email },
