@@ -3,9 +3,11 @@ import type { Request, Response } from "express";
 import { getAuthenticatedUser } from "../../../../shared/auth/authenticate.js";
 import type { CreateClass } from "../../application/create-class.js";
 import type { DeleteClass } from "../../application/delete-class.js";
+import type { EnrollStudent } from "../../application/enroll-student.js";
 import type { GetClassDetail } from "../../application/get-class-detail.js";
 import type { ListClasses } from "../../application/list-classes.js";
 import { createClassSchema } from "./create-class.dto.js";
+import { enrollStudentSchema } from "./enroll-student.dto.js";
 
 export class ClassController {
   constructor(
@@ -13,6 +15,7 @@ export class ClassController {
     private readonly listClasses: ListClasses,
     private readonly getClassDetail: GetClassDetail,
     private readonly deleteClass: DeleteClass,
+    private readonly enrollStudent: EnrollStudent,
   ) {}
 
   create = async (req: Request, res: Response): Promise<void> => {
@@ -53,5 +56,20 @@ export class ClassController {
     await this.deleteClass.execute(id, teacherId);
 
     res.status(204).send();
+  };
+
+  enroll = async (req: Request, res: Response): Promise<void> => {
+    const { name, email } = enrollStudentSchema.parse(req.body);
+    const classId = req.params["id"] as string;
+    const { sub: teacherId } = getAuthenticatedUser(req);
+
+    const student = await this.enrollStudent.execute({
+      classId,
+      teacherId,
+      name,
+      email,
+    });
+
+    res.status(201).json(student);
   };
 }
