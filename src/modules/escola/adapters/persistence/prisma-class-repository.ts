@@ -11,4 +11,11 @@ export class PrismaClassRepository implements ClassRepository {
   async create(data: CreateClassData): Promise<Class> {
     return this.prisma.class.create({ data });
   }
+
+  async findByTeacherId(teacherId: string): Promise<Class[]> {
+    return this.prisma.class.findMany({
+      where: { teacherId },
+      orderBy: { createdAt: "desc" },
+    });
+  }
 }
