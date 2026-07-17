@@ -11,13 +11,23 @@ import { InMemoryUserLearningProfileRepository } from "./test-utils/in-memory-us
 const PROFILE_1: LearningProfile = {
   id: "profile-1",
   name: "Simplificado + glossário + TTS",
-  prompt: { adaptations: ["simplified", "glossary", "tts"] },
+  prompt: { code: "P1", adaptations: ["simplified", "glossary", "tts"] },
 };
 
 const PROFILE_2: LearningProfile = {
   id: "profile-2",
   name: "Microtarefas + estrutura visual",
-  prompt: { adaptations: ["microtasks", "visual_structure"] },
+  prompt: { code: "P2", adaptations: ["microtasks", "visual_structure"] },
+};
+
+const PROFILE_COMPOSITE: LearningProfile = {
+  id: "profile-1-3",
+  name: "Simplificado + glossário + TTS + alto contraste + fonte grande + leitor de tela",
+  prompt: {
+    code: "P1+P3",
+    kind: "composite",
+    combines: ["P1", "P3"],
+  },
 };
 
 async function buildScenario() {
@@ -25,6 +35,7 @@ async function buildScenario() {
   const learningProfileRepository = new InMemoryLearningProfileRepository([
     PROFILE_1,
     PROFILE_2,
+    PROFILE_COMPOSITE,
   ]);
   const userLearningProfileRepository =
     new InMemoryUserLearningProfileRepository();
@@ -68,6 +79,11 @@ describe("AssignLearningProfile", () => {
     ).toBe(PROFILE_1.id);
   });
 
+  /**
+   * Regra do Épico 3 / BE-E3.7: ao vincular um novo perfil a um aluno que
+   * já tinha um, o anterior é substituído — nunca somado. Dificuldades
+   * combinadas usam um perfil composto único do catálogo.
+   */
   it("substitui o perfil anterior em vez de acumular múltiplos vínculos", async () => {
     const { student, assignLearningProfile, userLearningProfileRepository } =
       await buildScenario();
@@ -84,11 +100,41 @@ describe("AssignLearningProfile", () => {
 
     expect(link.learningProfileId).toBe(PROFILE_2.id);
     expect(userLearningProfileRepository.links).toHaveLength(1);
+    expect(userLearningProfileRepository.links).toEqual([
+      { studentId: student.id, learningProfileId: PROFILE_2.id },
+    ]);
     expect(
       await userLearningProfileRepository.findLearningProfileIdByUserId(
         student.id,
       ),
     ).toBe(PROFILE_2.id);
+    expect(
+      userLearningProfileRepository.links.some(
+        (item) => item.learningProfileId === PROFILE_1.id,
+      ),
+    ).toBe(false);
+  });
+
+  it("substitui por um perfil composto sem manter o perfil simples anterior", async () => {
+    const { student, assignLearningProfile, userLearningProfileRepository } =
+      await buildScenario();
+
+    await assignLearningProfile.execute({
+      studentId: student.id,
+      learningProfileId: PROFILE_1.id,
+    });
+
+    await assignLearningProfile.execute({
+      studentId: student.id,
+      learningProfileId: PROFILE_COMPOSITE.id,
+    });
+
+    expect(userLearningProfileRepository.links).toHaveLength(1);
+    expect(
+      await userLearningProfileRepository.findLearningProfileIdByUserId(
+        student.id,
+      ),
+    ).toBe(PROFILE_COMPOSITE.id);
   });
 
   it("rejeita quando o aluno não existe", async () => {
