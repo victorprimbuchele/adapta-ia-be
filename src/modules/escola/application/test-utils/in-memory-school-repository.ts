@@ -12,4 +12,8 @@ export class InMemorySchoolRepository implements SchoolRepository {
   async findAll(): Promise<School[]> {
     return [...this.schools];
   }
+
+  async findById(id: string): Promise<School | null> {
+    return this.schools.find((school) => school.id === id) ?? null;
+  }
 }

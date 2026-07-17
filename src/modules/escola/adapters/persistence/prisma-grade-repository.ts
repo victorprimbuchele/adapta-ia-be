@@ -8,4 +8,8 @@ export class PrismaGradeRepository implements GradeRepository {
   async findAll(): Promise<Grade[]> {
     return this.prisma.grade.findMany({ orderBy: { sortOrder: "asc" } });
   }
+
+  async findById(id: string): Promise<Grade | null> {
+    return this.prisma.grade.findUnique({ where: { id } });
+  }
 }
