@@ -1,5 +1,8 @@
 import type { Class } from "../domain/class.js";
-import { ClassAccessDeniedError, ClassNotFoundError } from "../domain/errors.js";
+import {
+  ClassAccessDeniedError,
+  ClassNotFoundError,
+} from "../domain/errors.js";
 import type { ClassRepository } from "../ports/class-repository.js";
 
 /**

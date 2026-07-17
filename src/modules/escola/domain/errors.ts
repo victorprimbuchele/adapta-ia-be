@@ -21,6 +21,17 @@ export class GradeNotFoundError extends AppError {
 }
 
 /**
+ * Professor responsável informado na criação de turma não corresponde a
+ * nenhum usuário existente (ver Épico 2, BE-E2.8: turma sempre precisa de
+ * escola, série e professor responsável).
+ */
+export class TeacherNotFoundError extends AppError {
+  constructor(teacherId: string) {
+    super(`Professor "${teacherId}" não encontrado.`, 404, "TEACHER_NOT_FOUND");
+  }
+}
+
+/**
  * Turma informada não existe.
  */
 export class ClassNotFoundError extends AppError {
