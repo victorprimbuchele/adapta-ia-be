@@ -11,6 +11,7 @@ export interface Class {
   teacherId: string;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Date | null;
 }
 
 /**

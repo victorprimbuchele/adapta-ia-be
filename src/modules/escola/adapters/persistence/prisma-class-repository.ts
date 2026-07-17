@@ -14,12 +14,19 @@ export class PrismaClassRepository implements ClassRepository {
 
   async findByTeacherId(teacherId: string): Promise<Class[]> {
     return this.prisma.class.findMany({
-      where: { teacherId },
+      where: { teacherId, deletedAt: null },
       orderBy: { createdAt: "desc" },
     });
   }
 
   async findById(id: string): Promise<Class | null> {
-    return this.prisma.class.findUnique({ where: { id } });
+    return this.prisma.class.findFirst({ where: { id, deletedAt: null } });
+  }
+
+  async softDelete(id: string): Promise<void> {
+    await this.prisma.class.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
   }
 }
