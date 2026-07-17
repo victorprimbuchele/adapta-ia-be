@@ -7,6 +7,7 @@ import type { EnrollStudent } from "../../application/enroll-student.js";
 import type { GetClassDetail } from "../../application/get-class-detail.js";
 import type { ListClasses } from "../../application/list-classes.js";
 import type { ListClassStudents } from "../../application/list-class-students.js";
+import type { RemoveStudentFromClass } from "../../application/remove-student-from-class.js";
 import { createClassSchema } from "./create-class.dto.js";
 import { enrollStudentSchema } from "./enroll-student.dto.js";
 
@@ -18,6 +19,7 @@ export class ClassController {
     private readonly deleteClass: DeleteClass,
     private readonly enrollStudent: EnrollStudent,
     private readonly listClassStudents: ListClassStudents,
+    private readonly removeStudentFromClass: RemoveStudentFromClass,
   ) {}
 
   create = async (req: Request, res: Response): Promise<void> => {
@@ -82,5 +84,19 @@ export class ClassController {
     const students = await this.listClassStudents.execute(classId, teacherId);
 
     res.status(200).json(students);
+  };
+
+  removeStudent = async (req: Request, res: Response): Promise<void> => {
+    const classId = req.params["id"] as string;
+    const studentId = req.params["alunoId"] as string;
+    const { sub: teacherId } = getAuthenticatedUser(req);
+
+    await this.removeStudentFromClass.execute({
+      classId,
+      teacherId,
+      studentId,
+    });
+
+    res.status(204).send();
   };
 }

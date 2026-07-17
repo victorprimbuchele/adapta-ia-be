@@ -9,6 +9,7 @@ import { EnrollStudent } from "../../application/enroll-student.js";
 import { GetClassDetail } from "../../application/get-class-detail.js";
 import { ListClasses } from "../../application/list-classes.js";
 import { ListClassStudents } from "../../application/list-class-students.js";
+import { RemoveStudentFromClass } from "../../application/remove-student-from-class.js";
 import { PrismaClassRepository } from "../persistence/prisma-class-repository.js";
 import { PrismaGradeRepository } from "../persistence/prisma-grade-repository.js";
 import { PrismaSchoolRepository } from "../persistence/prisma-school-repository.js";
@@ -47,6 +48,10 @@ const listClassStudents = new ListClassStudents(
   studentRepository,
   userLearningProfileRepository,
 );
+const removeStudentFromClass = new RemoveStudentFromClass(
+  classRepository,
+  userClassRepository,
+);
 const classController = new ClassController(
   createClass,
   listClasses,
@@ -54,6 +59,7 @@ const classController = new ClassController(
   deleteClass,
   enrollStudent,
   listClassStudents,
+  removeStudentFromClass,
 );
 
 export const classRouter = Router();
@@ -71,4 +77,9 @@ classRouter.post(
   "/:id/alunos",
   authenticate,
   asyncHandler(classController.enroll),
+);
+classRouter.delete(
+  "/:id/alunos/:alunoId",
+  authenticate,
+  asyncHandler(classController.removeStudent),
 );

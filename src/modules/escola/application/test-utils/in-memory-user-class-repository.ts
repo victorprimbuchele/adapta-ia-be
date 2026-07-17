@@ -23,6 +23,15 @@ export class InMemoryUserClassRepository implements UserClassRepository {
     this.links.push({ classId, studentId });
   }
 
+  async delete(classId: string, studentId: string): Promise<void> {
+    const index = this.links.findIndex(
+      (link) => link.classId === classId && link.studentId === studentId,
+    );
+    if (index >= 0) {
+      this.links.splice(index, 1);
+    }
+  }
+
   async listStudentIdsByClassId(classId: string): Promise<string[]> {
     return this.links
       .filter((link) => link.classId === classId)
