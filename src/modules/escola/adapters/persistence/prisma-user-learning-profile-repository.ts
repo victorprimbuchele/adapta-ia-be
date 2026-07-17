@@ -1,4 +1,5 @@
 import type { PrismaClient } from "../../../../generated/prisma/client.js";
+import type { LearningProfile } from "../../domain/learning-profile.js";
 import type { UserLearningProfileRepository } from "../../ports/user-learning-profile-repository.js";
 
 /**
@@ -32,5 +33,27 @@ export class PrismaUserLearningProfileRepository
     });
 
     return link?.learningProfileId ?? null;
+  }
+
+  async findLearningProfilesByUserIds(
+    userIds: string[],
+  ): Promise<ReadonlyMap<string, LearningProfile>> {
+    if (userIds.length === 0) {
+      return new Map();
+    }
+
+    const links = await this.prisma.userLearningProfile.findMany({
+      where: { userId: { in: userIds } },
+      select: {
+        userId: true,
+        learningProfile: {
+          select: { id: true, name: true, prompt: true },
+        },
+      },
+    });
+
+    return new Map(
+      links.map((link) => [link.userId, link.learningProfile]),
+    );
   }
 }

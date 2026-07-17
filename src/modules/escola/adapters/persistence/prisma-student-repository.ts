@@ -31,6 +31,17 @@ export class PrismaStudentRepository implements StudentRepository {
     });
   }
 
+  async findByIds(ids: string[]): Promise<Student[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    return this.prisma.user.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, name: true, email: true },
+    });
+  }
+
   async findByEmail(email: string): Promise<Student | null> {
     return this.prisma.user.findUnique({
       where: { email },

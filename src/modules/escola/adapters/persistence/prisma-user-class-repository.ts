@@ -24,4 +24,14 @@ export class PrismaUserClassRepository implements UserClassRepository {
       data: { classId, userId: studentId },
     });
   }
+
+  async listStudentIdsByClassId(classId: string): Promise<string[]> {
+    const enrollments = await this.prisma.userClass.findMany({
+      where: { classId },
+      orderBy: { createdAt: "asc" },
+      select: { userId: true },
+    });
+
+    return enrollments.map((enrollment) => enrollment.userId);
+  }
 }

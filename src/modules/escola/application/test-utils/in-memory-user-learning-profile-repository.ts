@@ -1,3 +1,5 @@
+import type { LearningProfile } from "../../domain/learning-profile.js";
+import type { LearningProfileRepository } from "../../ports/learning-profile-repository.js";
 import type { UserLearningProfileRepository } from "../../ports/user-learning-profile-repository.js";
 
 interface UserLearningProfileLink {
@@ -14,6 +16,10 @@ export class InMemoryUserLearningProfileRepository
   implements UserLearningProfileRepository
 {
   readonly links: UserLearningProfileLink[] = [];
+
+  constructor(
+    private readonly learningProfileRepository?: LearningProfileRepository,
+  ) {}
 
   async replaceForUser(
     studentId: string,
@@ -36,5 +42,29 @@ export class InMemoryUserLearningProfileRepository
       this.links.find((link) => link.studentId === studentId)
         ?.learningProfileId ?? null
     );
+  }
+
+  async findLearningProfilesByUserIds(
+    userIds: string[],
+  ): Promise<ReadonlyMap<string, LearningProfile>> {
+    const result: Map<string, LearningProfile> = new Map();
+    if (!this.learningProfileRepository) {
+      return result;
+    }
+
+    for (const userId of userIds) {
+      const learningProfileId =
+        await this.findLearningProfileIdByUserId(userId);
+      if (!learningProfileId) {
+        continue;
+      }
+      const profile =
+        await this.learningProfileRepository.findById(learningProfileId);
+      if (profile) {
+        result.set(userId, profile);
+      }
+    }
+
+    return result;
   }
 }
