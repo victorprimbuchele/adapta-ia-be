@@ -69,6 +69,19 @@ export class StudentAlreadyEnrolledError extends AppError {
 }
 
 /**
+ * Aluno não está vinculado à turma informada (ver Épico 3, BE-E3.4).
+ */
+export class StudentNotEnrolledError extends AppError {
+  constructor(studentId: string) {
+    super(
+      `O aluno "${studentId}" não está vinculado a esta turma.`,
+      404,
+      "STUDENT_NOT_ENROLLED",
+    );
+  }
+}
+
+/**
  * Aluno informado não existe (ver Épico 3, BE-E3.2).
  */
 export class StudentNotFoundError extends AppError {

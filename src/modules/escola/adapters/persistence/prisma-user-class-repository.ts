@@ -25,6 +25,14 @@ export class PrismaUserClassRepository implements UserClassRepository {
     });
   }
 
+  async delete(classId: string, studentId: string): Promise<void> {
+    await this.prisma.userClass.delete({
+      where: {
+        userId_classId: { userId: studentId, classId },
+      },
+    });
+  }
+
   async listStudentIdsByClassId(classId: string): Promise<string[]> {
     const enrollments = await this.prisma.userClass.findMany({
       where: { classId },
