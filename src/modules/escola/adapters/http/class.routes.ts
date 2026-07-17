@@ -4,6 +4,7 @@ import { authenticate } from "../../../../shared/auth/authenticate.js";
 import { asyncHandler } from "../../../../shared/http/async-handler.js";
 import { prisma } from "../../../../shared/infra/prisma-client.js";
 import { CreateClass } from "../../application/create-class.js";
+import { GetClassDetail } from "../../application/get-class-detail.js";
 import { ListClasses } from "../../application/list-classes.js";
 import { PrismaClassRepository } from "../persistence/prisma-class-repository.js";
 import { PrismaGradeRepository } from "../persistence/prisma-grade-repository.js";
@@ -19,9 +20,15 @@ const createClass = new CreateClass(
   gradeRepository,
 );
 const listClasses = new ListClasses(classRepository);
-const classController = new ClassController(createClass, listClasses);
+const getClassDetail = new GetClassDetail(classRepository);
+const classController = new ClassController(
+  createClass,
+  listClasses,
+  getClassDetail,
+);
 
 export const classRouter = Router();
 
 classRouter.post("/", authenticate, asyncHandler(classController.create));
 classRouter.get("/", authenticate, asyncHandler(classController.list));
+classRouter.get("/:id", authenticate, asyncHandler(classController.show));

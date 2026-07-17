@@ -12,3 +12,21 @@ export interface Class {
   createdAt: Date;
   updatedAt: Date;
 }
+
+/**
+ * Aluno vinculado a uma turma. A vinculação (`UserClass`) ainda não existe
+ * no MVP — ver Épico 3 — por isso `ClassDetail.students` está sempre vazio
+ * até essa funcionalidade ser implementada.
+ */
+export interface ClassStudent {
+  id: string;
+  name: string;
+  email: string;
+}
+
+/**
+ * Detalhe de turma (ver Épico 2, BE-E2.5), incluindo os alunos vinculados.
+ */
+export interface ClassDetail extends Class {
+  students: ClassStudent[];
+}
