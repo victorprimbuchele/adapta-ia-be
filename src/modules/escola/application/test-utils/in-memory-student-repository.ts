@@ -18,6 +18,10 @@ export class InMemoryStudentRepository implements StudentRepository {
     this.students = students;
   }
 
+  async findById(id: string): Promise<Student | null> {
+    return this.students.find((student) => student.id === id) ?? null;
+  }
+
   async findByEmail(email: string): Promise<Student | null> {
     return this.students.find((student) => student.email === email) ?? null;
   }

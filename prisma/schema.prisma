@@ -21,8 +21,9 @@ model User {
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
-  classes     Class[]
-  userClasses UserClass[]
+  classes               Class[]
+  userClasses           UserClass[]
+  userLearningProfiles  UserLearningProfile[]
 
   @@map("users")
 }
@@ -101,4 +102,41 @@ model UserClass {
   @@index([userId])
   @@index([classId])
   @@map("user_classes")
+}
+
+/// Perfil de aprendizagem (simples ou composto) — catálogo de referência
+/// usado na adaptação de atividades (ver Épico 3, BE-E3.2). Dificuldades
+/// combinadas são modeladas como um único perfil composto (ex.: "Dislexia
+/// + baixa visão"), não como múltiplos vínculos simultâneos. O campo
+/// `prompt` (JSONB) carrega as instruções enviadas à LLM na adaptação.
+model LearningProfile {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  prompt    Json
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  userLearningProfiles UserLearningProfile[]
+
+  @@map("learning_profiles")
+}
+
+/// Vinculação aluno (`User`) ↔ perfil de aprendizagem. No MVP cada aluno
+/// tem no máximo um perfil ativo: ao vincular um novo, o anterior é
+/// substituído (ver Épico 3, BE-E3.2). A tabela de junção permite evoluir
+/// para N:N em versões futuras removendo o `@@unique([userId])`.
+model UserLearningProfile {
+  id                String   @id @default(cuid())
+  userId            String   @map("user_id")
+  learningProfileId String   @map("learning_profile_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  user            User            @relation(fields: [userId], references: [id])
+  learningProfile LearningProfile @relation(fields: [learningProfileId], references: [id])
+
+  /// MVP: no máximo 1 perfil ativo por aluno.
+  @@unique([userId])
+  @@index([learningProfileId])
+  @@map("user_learning_profiles")
 }
