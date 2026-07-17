@@ -18,4 +18,8 @@ export class PrismaClassRepository implements ClassRepository {
       orderBy: { createdAt: "desc" },
     });
   }
+
+  async findById(id: string): Promise<Class | null> {
+    return this.prisma.class.findUnique({ where: { id } });
+  }
 }
