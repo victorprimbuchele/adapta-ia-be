@@ -22,4 +22,10 @@ export class InMemoryUserClassRepository implements UserClassRepository {
   async create(classId: string, studentId: string): Promise<void> {
     this.links.push({ classId, studentId });
   }
+
+  async listStudentIdsByClassId(classId: string): Promise<string[]> {
+    return this.links
+      .filter((link) => link.classId === classId)
+      .map((link) => link.studentId);
+  }
 }

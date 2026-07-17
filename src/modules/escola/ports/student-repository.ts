@@ -7,6 +7,7 @@ export interface CreateStudentData {
 
 export interface StudentRepository {
   findById(id: string): Promise<Student | null>;
+  findByIds(ids: string[]): Promise<Student[]>;
   findByEmail(email: string): Promise<Student | null>;
   create(data: CreateStudentData): Promise<Student>;
 }
