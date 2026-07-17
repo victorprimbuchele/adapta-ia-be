@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 
 import { getAuthenticatedUser } from "../../../../shared/auth/authenticate.js";
 import type { CreateClass } from "../../application/create-class.js";
+import type { DeleteClass } from "../../application/delete-class.js";
 import type { GetClassDetail } from "../../application/get-class-detail.js";
 import type { ListClasses } from "../../application/list-classes.js";
 import { createClassSchema } from "./create-class.dto.js";
@@ -11,6 +12,7 @@ export class ClassController {
     private readonly createClass: CreateClass,
     private readonly listClasses: ListClasses,
     private readonly getClassDetail: GetClassDetail,
+    private readonly deleteClass: DeleteClass,
   ) {}
 
   create = async (req: Request, res: Response): Promise<void> => {
@@ -42,5 +44,14 @@ export class ClassController {
     const classDetail = await this.getClassDetail.execute(id, teacherId);
 
     res.status(200).json(classDetail);
+  };
+
+  remove = async (req: Request, res: Response): Promise<void> => {
+    const id = req.params["id"] as string;
+    const { sub: teacherId } = getAuthenticatedUser(req);
+
+    await this.deleteClass.execute(id, teacherId);
+
+    res.status(204).send();
   };
 }

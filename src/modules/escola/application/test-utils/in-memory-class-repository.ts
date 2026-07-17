@@ -24,6 +24,7 @@ export class InMemoryClassRepository implements ClassRepository {
       teacherId: data.teacherId,
       createdAt: now,
       updatedAt: now,
+      deletedAt: null,
     };
 
     this.classes.push(createdClass);
@@ -31,10 +32,23 @@ export class InMemoryClassRepository implements ClassRepository {
   }
 
   async findByTeacherId(teacherId: string): Promise<Class[]> {
-    return this.classes.filter((klass) => klass.teacherId === teacherId);
+    return this.classes.filter(
+      (klass) => klass.teacherId === teacherId && klass.deletedAt === null,
+    );
   }
 
   async findById(id: string): Promise<Class | null> {
-    return this.classes.find((klass) => klass.id === id) ?? null;
+    return (
+      this.classes.find(
+        (klass) => klass.id === id && klass.deletedAt === null,
+      ) ?? null
+    );
+  }
+
+  async softDelete(id: string): Promise<void> {
+    const klass = this.classes.find((candidate) => candidate.id === id);
+    if (klass) {
+      klass.deletedAt = new Date();
+    }
   }
 }
