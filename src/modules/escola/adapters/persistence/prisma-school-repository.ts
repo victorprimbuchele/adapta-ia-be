@@ -8,4 +8,8 @@ export class PrismaSchoolRepository implements SchoolRepository {
   async findAll(): Promise<School[]> {
     return this.prisma.school.findMany({ orderBy: { name: "asc" } });
   }
+
+  async findById(id: string): Promise<School | null> {
+    return this.prisma.school.findUnique({ where: { id } });
+  }
 }

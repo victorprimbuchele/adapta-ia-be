@@ -12,4 +12,8 @@ export class InMemoryGradeRepository implements GradeRepository {
   async findAll(): Promise<Grade[]> {
     return [...this.grades];
   }
+
+  async findById(id: string): Promise<Grade | null> {
+    return this.grades.find((grade) => grade.id === id) ?? null;
+  }
 }
