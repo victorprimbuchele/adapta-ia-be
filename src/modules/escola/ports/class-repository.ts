@@ -9,4 +9,5 @@ export interface CreateClassData {
 
 export interface ClassRepository {
   create(data: CreateClassData): Promise<Class>;
+  findByTeacherId(teacherId: string): Promise<Class[]>;
 }

@@ -29,4 +29,8 @@ export class InMemoryClassRepository implements ClassRepository {
     this.classes.push(createdClass);
     return createdClass;
   }
+
+  async findByTeacherId(teacherId: string): Promise<Class[]> {
+    return this.classes.filter((klass) => klass.teacherId === teacherId);
+  }
 }
