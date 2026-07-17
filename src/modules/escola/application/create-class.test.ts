@@ -1,8 +1,13 @@
 import { CreateClass } from "./create-class.js";
-import { GradeNotFoundError, SchoolNotFoundError } from "../domain/errors.js";
+import {
+  GradeNotFoundError,
+  SchoolNotFoundError,
+  TeacherNotFoundError,
+} from "../domain/errors.js";
 import { InMemoryClassRepository } from "./test-utils/in-memory-class-repository.js";
 import { InMemoryGradeRepository } from "./test-utils/in-memory-grade-repository.js";
 import { InMemorySchoolRepository } from "./test-utils/in-memory-school-repository.js";
+import { InMemoryTeacherRepository } from "./test-utils/in-memory-teacher-repository.js";
 
 function buildRepositories() {
   const now = new Date();
@@ -25,19 +30,32 @@ function buildRepositories() {
       updatedAt: now,
     },
   ]);
+  const teacherRepository = new InMemoryTeacherRepository([
+    { id: "teacher-1" },
+  ]);
   const classRepository = new InMemoryClassRepository();
 
-  return { schoolRepository, gradeRepository, classRepository };
+  return {
+    schoolRepository,
+    gradeRepository,
+    teacherRepository,
+    classRepository,
+  };
 }
 
 describe("CreateClass", () => {
   it("cria a turma com o professor responsável definido como o usuário autenticado", async () => {
-    const { schoolRepository, gradeRepository, classRepository } =
-      buildRepositories();
+    const {
+      schoolRepository,
+      gradeRepository,
+      teacherRepository,
+      classRepository,
+    } = buildRepositories();
     const createClass = new CreateClass(
       classRepository,
       schoolRepository,
       gradeRepository,
+      teacherRepository,
     );
 
     const createdClass = await createClass.execute({
@@ -57,12 +75,17 @@ describe("CreateClass", () => {
   });
 
   it("rejeita a criação quando a escola informada não existe", async () => {
-    const { schoolRepository, gradeRepository, classRepository } =
-      buildRepositories();
+    const {
+      schoolRepository,
+      gradeRepository,
+      teacherRepository,
+      classRepository,
+    } = buildRepositories();
     const createClass = new CreateClass(
       classRepository,
       schoolRepository,
       gradeRepository,
+      teacherRepository,
     );
 
     await expect(
@@ -77,12 +100,17 @@ describe("CreateClass", () => {
   });
 
   it("rejeita a criação quando a série informada não existe", async () => {
-    const { schoolRepository, gradeRepository, classRepository } =
-      buildRepositories();
+    const {
+      schoolRepository,
+      gradeRepository,
+      teacherRepository,
+      classRepository,
+    } = buildRepositories();
     const createClass = new CreateClass(
       classRepository,
       schoolRepository,
       gradeRepository,
+      teacherRepository,
     );
 
     await expect(
@@ -93,6 +121,31 @@ describe("CreateClass", () => {
         teacherId: "teacher-1",
       }),
     ).rejects.toBeInstanceOf(GradeNotFoundError);
+    expect(classRepository.classes).toHaveLength(0);
+  });
+
+  it("rejeita a criação quando o professor responsável não existe", async () => {
+    const {
+      schoolRepository,
+      gradeRepository,
+      teacherRepository,
+      classRepository,
+    } = buildRepositories();
+    const createClass = new CreateClass(
+      classRepository,
+      schoolRepository,
+      gradeRepository,
+      teacherRepository,
+    );
+
+    await expect(
+      createClass.execute({
+        name: "Turma A",
+        schoolId: "school-1",
+        gradeId: "grade-1",
+        teacherId: "professor-inexistente",
+      }),
+    ).rejects.toBeInstanceOf(TeacherNotFoundError);
     expect(classRepository.classes).toHaveLength(0);
   });
 });

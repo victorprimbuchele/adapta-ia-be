@@ -10,15 +10,18 @@ import { ListClasses } from "../../application/list-classes.js";
 import { PrismaClassRepository } from "../persistence/prisma-class-repository.js";
 import { PrismaGradeRepository } from "../persistence/prisma-grade-repository.js";
 import { PrismaSchoolRepository } from "../persistence/prisma-school-repository.js";
+import { PrismaTeacherRepository } from "../persistence/prisma-teacher-repository.js";
 import { ClassController } from "./class.controller.js";
 
 const classRepository = new PrismaClassRepository(prisma);
 const schoolRepository = new PrismaSchoolRepository(prisma);
 const gradeRepository = new PrismaGradeRepository(prisma);
+const teacherRepository = new PrismaTeacherRepository(prisma);
 const createClass = new CreateClass(
   classRepository,
   schoolRepository,
   gradeRepository,
+  teacherRepository,
 );
 const listClasses = new ListClasses(classRepository);
 const getClassDetail = new GetClassDetail(classRepository);

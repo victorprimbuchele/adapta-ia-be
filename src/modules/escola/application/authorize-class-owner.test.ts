@@ -1,5 +1,8 @@
 import { authorizeClassOwner } from "./authorize-class-owner.js";
-import { ClassAccessDeniedError, ClassNotFoundError } from "../domain/errors.js";
+import {
+  ClassAccessDeniedError,
+  ClassNotFoundError,
+} from "../domain/errors.js";
 import { InMemoryClassRepository } from "./test-utils/in-memory-class-repository.js";
 
 describe("authorizeClassOwner", () => {
@@ -18,7 +21,10 @@ describe("authorizeClassOwner", () => {
       "teacher-1",
     );
 
-    expect(klass).toMatchObject({ id: createdClass.id, teacherId: "teacher-1" });
+    expect(klass).toMatchObject({
+      id: createdClass.id,
+      teacherId: "teacher-1",
+    });
   });
 
   it("rejeita com ClassNotFoundError (404) quando a turma não existe", async () => {

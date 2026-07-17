@@ -1,5 +1,8 @@
 import { GetClassDetail } from "./get-class-detail.js";
-import { ClassAccessDeniedError, ClassNotFoundError } from "../domain/errors.js";
+import {
+  ClassAccessDeniedError,
+  ClassNotFoundError,
+} from "../domain/errors.js";
 import { InMemoryClassRepository } from "./test-utils/in-memory-class-repository.js";
 
 describe("GetClassDetail", () => {
