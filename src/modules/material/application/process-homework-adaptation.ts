@@ -13,22 +13,25 @@ import type {
   AudioGeneratorPort,
   GeneratedAudio,
 } from "../ports/audio-generator.js";
+import type { FileRepository } from "../ports/file-repository.js";
 import type { HomeworkRepository } from "../ports/homework-repository.js";
+import type { ObjectStoragePort } from "../ports/object-storage.js";
 import type { TextSimplifierPort } from "../ports/text-simplifier.js";
 import { authorizeHomeworkOwner } from "./authorize-homework-owner.js";
 import { buildVariantSpeechText } from "./build-variant-speech-text.js";
+import { persistVariantAudio } from "./persist-variant-audio.js";
 import { resolveAdaptationGlossary } from "./resolve-adaptation-glossary.js";
 
 export interface ProcessHomeworkAdaptationResult {
   homework: Homework;
-  /** Áudio TTS da variante quando o perfil pede (BE-E5.6); upload em BE-E5.7. */
+  /** Áudio TTS gerado quando o perfil pede (BE-E5.6); já enviado ao storage em BE-E5.7. */
   audio: GeneratedAudio | null;
 }
 
 /**
- * Consome um job de adaptação (Épico 5, BE-E5.2–E5.6 / ADR 006).
- * Chama a LLM, resolve o glossário, persiste a Homework variante e gera
- * áudio TTS a partir do texto da variante quando o perfil pede.
+ * Consome um job de adaptação (Épico 5, BE-E5.2–E5.7 / ADR 006).
+ * Chama a LLM, persiste a variante, gera TTS quando o perfil pede e
+ * faz upload + registro `File` vinculado em `audioFileId`.
  */
 export class ProcessHomeworkAdaptation {
   constructor(
@@ -36,6 +39,8 @@ export class ProcessHomeworkAdaptation {
     private readonly learningProfileRepository: LearningProfileRepository,
     private readonly textSimplifier: TextSimplifierPort,
     private readonly audioGenerator: AudioGeneratorPort,
+    private readonly objectStorage: ObjectStoragePort,
+    private readonly fileRepository: FileRepository,
   ) {}
 
   async execute(
@@ -81,7 +86,7 @@ export class ProcessHomeworkAdaptation {
       adapted.glossary,
     );
 
-    const variant = await this.homeworkRepository.upsertAdaptation({
+    let variant = await this.homeworkRepository.upsertAdaptation({
       title: adapted.title,
       content: adapted.content,
       glossary,
@@ -91,16 +96,25 @@ export class ProcessHomeworkAdaptation {
       teacherId: job.teacherId,
     });
 
-    const audio = profilePrompt.adaptations.tts
-      ? await this.audioGenerator.generate({
-          text: buildVariantSpeechText(variant),
-        })
-      : null;
+    let audio: GeneratedAudio | null = null;
+    if (profilePrompt.adaptations.tts) {
+      audio = await this.audioGenerator.generate({
+        text: buildVariantSpeechText(variant),
+      });
+      variant = await persistVariantAudio({
+        objectStorage: this.objectStorage,
+        fileRepository: this.fileRepository,
+        homeworkRepository: this.homeworkRepository,
+        variant,
+        audio,
+      });
+    }
 
     console.log(
       `[adaptation] saved variant=${variant.id} homework=${job.homeworkId} ` +
         `profile=${job.learningProfileId} code=${profilePrompt.code} ` +
         `glossaryEntries=${glossary?.length ?? 0} ` +
+        `audioFileId=${variant.audioFileId ?? "none"} ` +
         `audioBytes=${audio?.data.length ?? 0}`,
     );
 

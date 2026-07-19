@@ -43,6 +43,7 @@ describe("CreateGeneratorHomework", () => {
       isDraft: true,
       homeworkId: null,
       learningProfileId: null,
+      audioFileId: null,
     });
     expect(homeworkRepository.homeworks).toHaveLength(1);
   });

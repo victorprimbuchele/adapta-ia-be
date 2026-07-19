@@ -17,6 +17,7 @@ type HomeworkRow = {
   isDraft: boolean;
   homeworkId: string | null;
   learningProfileId: string | null;
+  audioFileId: string | null;
   classId: string;
   teacherId: string;
   createdAt: Date;
@@ -25,7 +26,7 @@ type HomeworkRow = {
 
 /**
  * Implementação de `HomeworkRepository` sobre a tabela `homeworks`
- * (Épico 4; variantes adaptadas — Épico 5, BE-E5.5 / BE-E5.4).
+ * (Épico 4; variantes — Épico 5, BE-E5.5 / BE-E5.7).
  */
 export class PrismaHomeworkRepository implements HomeworkRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -40,6 +41,7 @@ export class PrismaHomeworkRepository implements HomeworkRepository {
         isDraft: true,
         homeworkId: null,
         learningProfileId: null,
+        audioFileId: null,
         glossary: Prisma.DbNull,
       },
     });
@@ -123,6 +125,18 @@ export class PrismaHomeworkRepository implements HomeworkRepository {
 
     return toDomain(row);
   }
+
+  async attachAudioFile(
+    homeworkId: string,
+    audioFileId: string,
+  ): Promise<Homework> {
+    const row = await this.prisma.homework.update({
+      where: { id: homeworkId },
+      data: { audioFileId },
+    });
+
+    return toDomain(row);
+  }
 }
 
 function toDomain(row: HomeworkRow): Homework {
@@ -134,6 +148,7 @@ function toDomain(row: HomeworkRow): Homework {
     isDraft: row.isDraft,
     homeworkId: row.homeworkId,
     learningProfileId: row.learningProfileId,
+    audioFileId: row.audioFileId,
     classId: row.classId,
     teacherId: row.teacherId,
     createdAt: row.createdAt,

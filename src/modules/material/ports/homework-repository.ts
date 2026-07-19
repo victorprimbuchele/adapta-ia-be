@@ -57,4 +57,10 @@ export interface HomeworkRepository {
    * estruturado quando o perfil pede) — Épico 5, BE-E5.5 / BE-E5.4.
    */
   upsertAdaptation(data: UpsertAdaptationHomeworkData): Promise<Homework>;
+
+  /**
+   * Vincula a variante ao registro `File` de áudio (`audioFileId`) —
+   * Épico 5, BE-E5.7.
+   */
+  attachAudioFile(homeworkId: string, audioFileId: string): Promise<Homework>;
 }

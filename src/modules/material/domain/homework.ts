@@ -6,8 +6,9 @@ import type { GlossaryEntry } from "./glossary.js";
  * with no link to another homework or learning profile (`homeworkId` and
  * `learningProfileId` null). Always belongs to a class (`classId`).
  * Adapted variants link to the generator (`homeworkId`) and learning
- * profile (`learningProfileId`), and may carry a structured `glossary`
- * (Épico 5, BE-E5.5 / BE-E5.4).
+ * profile (`learningProfileId`), may carry a structured `glossary`
+ * (Épico 5, BE-E5.5 / BE-E5.4), and may point to TTS audio via
+ * `audioFileId` (BE-E5.7).
  */
 export interface Homework {
   id: string;
@@ -17,6 +18,7 @@ export interface Homework {
   isDraft: boolean;
   homeworkId: string | null;
   learningProfileId: string | null;
+  audioFileId: string | null;
   classId: string;
   teacherId: string;
   createdAt: Date;
