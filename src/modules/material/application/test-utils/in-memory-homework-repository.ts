@@ -3,6 +3,7 @@ import type {
   CreateGeneratorHomeworkData,
   HomeworkRepository,
   UpdateDraftHomeworkData,
+  UpsertAdaptationHomeworkData,
 } from "../../ports/homework-repository.js";
 
 let nextId = 1;
@@ -20,6 +21,7 @@ export class InMemoryHomeworkRepository implements HomeworkRepository {
       id: `homework-${nextId++}`,
       title: data.title,
       content: data.content,
+      glossary: null,
       isDraft: true,
       homeworkId: null,
       learningProfileId: null,
@@ -67,5 +69,42 @@ export class InMemoryHomeworkRepository implements HomeworkRepository {
     homework.updatedAt = new Date();
 
     return homework;
+  }
+
+  async upsertAdaptation(
+    data: UpsertAdaptationHomeworkData,
+  ): Promise<Homework> {
+    const existing = this.homeworks.find(
+      (homework) =>
+        homework.homeworkId === data.homeworkId &&
+        homework.learningProfileId === data.learningProfileId,
+    );
+
+    if (existing) {
+      existing.title = data.title;
+      existing.content = data.content;
+      existing.glossary = data.glossary;
+      existing.isDraft = false;
+      existing.updatedAt = new Date();
+      return existing;
+    }
+
+    const now = new Date();
+    const adaptation: Homework = {
+      id: `homework-${nextId++}`,
+      title: data.title,
+      content: data.content,
+      glossary: data.glossary,
+      isDraft: false,
+      homeworkId: data.homeworkId,
+      learningProfileId: data.learningProfileId,
+      classId: data.classId,
+      teacherId: data.teacherId,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    this.homeworks.push(adaptation);
+    return adaptation;
   }
 }

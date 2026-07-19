@@ -14,6 +14,9 @@ export class InMemoryTextSimplifier implements TextSimplifierPort {
   result: TextSimplifierResult = {
     title: "Título simplificado",
     content: "Conteúdo adaptado em linguagem simples.",
+    glossary: [
+      { term: "conceito", definition: "ideia principal do conteúdo" },
+    ],
   };
 
   async simplify(input: TextSimplifierInput): Promise<TextSimplifierResult> {

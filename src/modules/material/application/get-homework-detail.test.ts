@@ -46,6 +46,9 @@ describe("GetHomeworkDetail", () => {
         id: "adaptation-1",
         title: "Frações — perfil P1",
         content: "Variante simplificada",
+        glossary: [
+          { term: "fração", definition: "parte de um todo" },
+        ],
         isDraft: false,
         homeworkId: generator.id,
         learningProfileId: "profile-1",
@@ -58,6 +61,7 @@ describe("GetHomeworkDetail", () => {
         id: "adaptation-2",
         title: "Frações — perfil P2",
         content: "Variante com microtarefas",
+        glossary: null,
         isDraft: false,
         homeworkId: generator.id,
         learningProfileId: "profile-2",
@@ -78,6 +82,7 @@ describe("GetHomeworkDetail", () => {
         id: "adaptation-1",
         homeworkId: generator.id,
         learningProfileId: "profile-1",
+        glossary: [{ term: "fração", definition: "parte de um todo" }],
       }),
       expect.objectContaining({
         id: "adaptation-2",

@@ -34,10 +34,33 @@ const PROFILE_P1: LearningProfile = {
   },
 };
 
+const PROFILE_P2: LearningProfile = {
+  id: "profile-2",
+  name: "Microtarefas + estrutura visual",
+  prompt: {
+    code: "P2",
+    kind: "base",
+    combines: ["P2"],
+    adaptations: {
+      simplifyText: false,
+      glossary: false,
+      tts: false,
+      microtasks: true,
+      visualStructure: true,
+      highContrast: false,
+      largeFont: false,
+      screenReader: false,
+    },
+    instructions: "Fragmente em microtarefas.",
+  },
+};
+
 async function buildScenario(overrides?: { profile?: LearningProfile }) {
   const profile = overrides?.profile ?? PROFILE_P1;
   const homeworkRepository = new InMemoryHomeworkRepository();
   const learningProfileRepository = new InMemoryLearningProfileRepository([
+    PROFILE_P1,
+    PROFILE_P2,
     profile,
   ]);
   const textSimplifier = new InMemoryTextSimplifier();
@@ -63,29 +86,64 @@ async function buildScenario(overrides?: { profile?: LearningProfile }) {
 }
 
 describe("ProcessHomeworkAdaptation", () => {
-  it("chama a LLM com prompt do perfil + conteúdo estruturado da geradora", async () => {
-    const { generator, textSimplifier, processHomeworkAdaptation } =
-      await buildScenario();
+  it("persiste variante adaptada com glossário JSON estruturado", async () => {
+    const {
+      generator,
+      homeworkRepository,
+      textSimplifier,
+      processHomeworkAdaptation,
+    } = await buildScenario();
     const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
 
-    const result = await processHomeworkAdaptation.execute({
+    const variant = await processHomeworkAdaptation.execute({
       homeworkId: generator.id,
       learningProfileId: PROFILE_P1.id,
       teacherId: "teacher-1",
     });
 
     expect(textSimplifier.calls).toHaveLength(1);
-    expect(textSimplifier.calls[0]).toEqual({
-      profilePrompt: PROFILE_P1.prompt,
-      homework: {
-        title: generator.title,
-        content: generator.content,
-      },
+    expect(variant).toMatchObject({
+      title: textSimplifier.result.title,
+      content: textSimplifier.result.content,
+      glossary: textSimplifier.result.glossary,
+      homeworkId: generator.id,
+      learningProfileId: PROFILE_P1.id,
+      classId: "class-1",
+      teacherId: "teacher-1",
+      isDraft: false,
     });
-    expect(result).toEqual(textSimplifier.result);
-    expect(logSpy).toHaveBeenCalledWith(
-      expect.stringContaining(`homework=${generator.id}`),
-    );
+    expect(homeworkRepository.homeworks).toHaveLength(2);
+    expect(
+      homeworkRepository.homeworks.find((item) => item.id === variant.id)
+        ?.glossary,
+    ).toEqual([
+      { term: "conceito", definition: "ideia principal do conteúdo" },
+    ]);
+
+    logSpy.mockRestore();
+  });
+
+  it("persiste glossary null quando o perfil não pede glossário", async () => {
+    const {
+      generator,
+      homeworkRepository,
+      textSimplifier,
+      processHomeworkAdaptation,
+    } = await buildScenario({ profile: PROFILE_P2 });
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+
+    const variant = await processHomeworkAdaptation.execute({
+      homeworkId: generator.id,
+      learningProfileId: PROFILE_P2.id,
+      teacherId: "teacher-1",
+    });
+
+    expect(variant.glossary).toBeNull();
+    expect(
+      homeworkRepository.homeworks.find((item) => item.id === variant.id)
+        ?.glossary,
+    ).toBeNull();
+    expect(textSimplifier.calls).toHaveLength(1);
 
     logSpy.mockRestore();
   });
@@ -130,6 +188,7 @@ describe("ProcessHomeworkAdaptation", () => {
       id: "adaptation-1",
       title: "Variante",
       content: "Já adaptada",
+      glossary: null,
       isDraft: false,
       homeworkId: generator.id,
       learningProfileId: PROFILE_P1.id,

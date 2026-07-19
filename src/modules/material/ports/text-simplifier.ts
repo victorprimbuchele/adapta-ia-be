@@ -1,4 +1,5 @@
 import type { LearningProfilePrompt } from "../../escola/domain/learning-profile-prompt.js";
+import type { GlossaryEntry } from "../domain/glossary.js";
 
 /**
  * Entrada da skill de adaptação textual (Épico 5, BE-E5.3 / ADR 003).
@@ -13,13 +14,13 @@ export interface TextSimplifierInput {
 }
 
 /**
- * Texto adaptado pela LLM. `glossary` só vem preenchido quando o perfil
- * pede glossário; a persistência da variante fica para tickets seguintes.
+ * Texto adaptado pela LLM. `glossary` é o JSON estruturado gerado a partir
+ * do conteúdo simplificado quando o perfil pede (Épico 5, BE-E5.4).
  */
 export interface TextSimplifierResult {
   title: string;
   content: string;
-  glossary?: Array<{ term: string; definition: string }>;
+  glossary?: GlossaryEntry[];
 }
 
 /**

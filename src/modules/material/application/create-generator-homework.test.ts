@@ -39,6 +39,7 @@ describe("CreateGeneratorHomework", () => {
       content: "Leia o texto e responda às perguntas.",
       classId: createdClass.id,
       teacherId: "teacher-1",
+      glossary: null,
       isDraft: true,
       homeworkId: null,
       learningProfileId: null,

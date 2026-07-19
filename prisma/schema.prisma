@@ -160,13 +160,18 @@ model UserLearningProfile {
 /// Homework — material created by the teacher via the structured form
 /// (Epic 4, BE-E4.1 / ADR 012). The "generator homework" is the original
 /// (`homeworkId` and `learningProfileId` null, `isDraft` true on create).
-/// Future adaptations point to the generator via `homeworkId` and carry
-/// the target profile's `learningProfileId`. Always linked to a class
-/// (`classId`) so activities can be listed per turma (BE-E4.5).
+/// Adaptations point to the generator via `homeworkId` and carry the
+/// target profile's `learningProfileId`. `glossary` (JSON) holds the
+/// structured glossary on adapted variants (Épico 5, BE-E5.4). Always
+/// linked to a class (`classId`) so activities can be listed per turma
+/// (BE-E4.5).
 model Homework {
   id                String   @id @default(cuid())
   title             String
   content           String
+  /// Glossário estruturado `[{ term, definition }]` na variante adaptada;
+  /// null na geradora ou quando o perfil não pede glossário (BE-E5.4).
+  glossary          Json?
   isDraft           Boolean  @default(true) @map("is_draft")
   homeworkId        String?  @map("homework_id")
   learningProfileId String?  @map("learning_profile_id")
@@ -181,6 +186,7 @@ model Homework {
   class           Class            @relation(fields: [classId], references: [id])
   teacher         User             @relation(fields: [teacherId], references: [id])
 
+  @@unique([homeworkId, learningProfileId])
   @@index([teacherId])
   @@index([homeworkId])
   @@index([learningProfileId])

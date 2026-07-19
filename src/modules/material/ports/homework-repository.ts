@@ -1,3 +1,4 @@
+import type { GlossaryEntry } from "../domain/glossary.js";
 import type { Homework } from "../domain/homework.js";
 
 export interface CreateGeneratorHomeworkData {
@@ -10,6 +11,16 @@ export interface CreateGeneratorHomeworkData {
 export interface UpdateDraftHomeworkData {
   title: string;
   content: string;
+}
+
+export interface UpsertAdaptationHomeworkData {
+  title: string;
+  content: string;
+  glossary: GlossaryEntry[] | null;
+  homeworkId: string;
+  learningProfileId: string;
+  classId: string;
+  teacherId: string;
 }
 
 export interface HomeworkRepository {
@@ -38,4 +49,10 @@ export interface HomeworkRepository {
    * adaptações/variantes (ver Épico 4, BE-E4.3).
    */
   updateDraft(id: string, data: UpdateDraftHomeworkData): Promise<Homework>;
+
+  /**
+   * Cria ou atualiza a variante adaptada para o par geradora+perfil,
+   * persistindo o glossário estruturado quando o perfil pede (BE-E5.4).
+   */
+  upsertAdaptation(data: UpsertAdaptationHomeworkData): Promise<Homework>;
 }
