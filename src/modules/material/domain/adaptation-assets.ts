@@ -1,11 +1,7 @@
 import type { Homework } from "./homework.js";
+import { isGeneratorHomework } from "./generator-homework.js";
 
-/**
- * Homework geradora: sem vínculo a outra homework (`homeworkId` null).
- */
-export function isGeneratorHomework(homework: Homework): boolean {
-  return homework.homeworkId === null;
-}
+export { isGeneratorHomework } from "./generator-homework.js";
 
 /**
  * Glossário estruturado e/ou áudio TTS — assets de adaptação (Épico 5).

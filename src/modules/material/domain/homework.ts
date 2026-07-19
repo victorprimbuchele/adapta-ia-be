@@ -4,7 +4,7 @@ import type { GlossaryEntry } from "./glossary.js";
  * Homework — material created by the teacher via the structured form
  * (Epic 4, BE-E4.1). The generator is born as a draft (`isDraft = true`)
  * with no link to another homework or learning profile (`homeworkId` and
- * `learningProfileId` null). Always belongs to a class (`classId`).
+ * `learningProfileId` null — BE-E4.7). Always belongs to a class (`classId`).
  * Adapted variants link to the generator (`homeworkId`) and learning
  * profile (`learningProfileId`), may carry a structured `glossary`
  * (Épico 5, BE-E5.5 / BE-E5.4), and may point to TTS audio via
