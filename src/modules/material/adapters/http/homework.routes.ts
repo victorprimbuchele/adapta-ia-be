@@ -6,7 +6,7 @@ import { prisma } from "../../../../shared/infra/prisma-client.js";
 import { CreateGeneratorHomework } from "../../application/create-generator-homework.js";
 import { PrismaHomeworkRepository } from "../persistence/prisma-homework-repository.js";
 import { PrismaTeacherRepository } from "../persistence/prisma-teacher-repository.js";
-import { AtividadeController } from "./atividade.controller.js";
+import { HomeworkController } from "./homework.controller.js";
 
 const homeworkRepository = new PrismaHomeworkRepository(prisma);
 const teacherRepository = new PrismaTeacherRepository(prisma);
@@ -14,12 +14,12 @@ const createGeneratorHomework = new CreateGeneratorHomework(
   homeworkRepository,
   teacherRepository,
 );
-const atividadeController = new AtividadeController(createGeneratorHomework);
+const homeworkController = new HomeworkController(createGeneratorHomework);
 
-export const atividadeRouter = Router();
+export const homeworkRouter = Router();
 
-atividadeRouter.post(
+homeworkRouter.post(
   "/",
   authenticate,
-  asyncHandler(atividadeController.create),
+  asyncHandler(homeworkController.create),
 );

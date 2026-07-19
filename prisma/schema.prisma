@@ -106,7 +106,7 @@ model UserClass {
 }
 
 /// Perfil de aprendizagem (simples ou composto) — catálogo de referência
-/// usado na adaptação de atividades (ver Épico 3, BE-E3.2). Dificuldades
+/// usado na adaptação de homeworks (ver Épico 3, BE-E3.2). Dificuldades
 /// combinadas são modeladas como um único perfil composto (ex.: "Dislexia
 /// + baixa visão"), não como múltiplos vínculos simultâneos. O campo
 /// `prompt` (JSONB) carrega as instruções enviadas à LLM na adaptação.
@@ -143,11 +143,11 @@ model UserLearningProfile {
   @@map("user_learning_profiles")
 }
 
-/// Atividade (Homework) — material criado pelo professor via formulário
-/// estruturado (ver Épico 4, BE-E4.1 / ADR 012). A "homework geradora" é o
-/// original (`homeworkId` e `learningProfileId` nulos, `isDraft` true na
-/// criação). Adaptações futuras apontam para a geradora via `homeworkId` e
-/// carregam o `learningProfileId` do perfil alvo.
+/// Homework — material created by the teacher via the structured form
+/// (Epic 4, BE-E4.1 / ADR 012). The "generator homework" is the original
+/// (`homeworkId` and `learningProfileId` null, `isDraft` true on create).
+/// Future adaptations point to the generator via `homeworkId` and carry
+/// the target profile's `learningProfileId`.
 model Homework {
   id                String   @id @default(cuid())
   title             String

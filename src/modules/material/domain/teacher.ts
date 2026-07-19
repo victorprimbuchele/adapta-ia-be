@@ -1,7 +1,7 @@
 /**
- * Referência mínima ao professor (usuário) responsável pela atividade, do
- * ponto de vista do módulo `material` — apenas o necessário para validar
- * que ele existe antes de vinculá-lo à homework (ver Épico 4, BE-E4.1).
+ * Minimal teacher (user) reference responsible for a homework, from the
+ * `material` module perspective — only what is needed to validate that the
+ * teacher exists before linking them to the homework (Epic 4, BE-E4.1).
  */
 export interface Teacher {
   id: string;
