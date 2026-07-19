@@ -1,8 +1,8 @@
 import { AppError } from "../../../shared/errors/app-error.js";
 
 /**
- * Professor responsável informado na criação da atividade não corresponde
- * a nenhum usuário existente (ver Épico 4, BE-E4.1).
+ * Teacher informed when creating a homework does not match any existing
+ * user (Epic 4, BE-E4.1).
  */
 export class TeacherNotFoundError extends AppError {
   constructor(teacherId: string) {

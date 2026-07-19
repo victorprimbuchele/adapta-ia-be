@@ -88,7 +88,7 @@ const LEARNING_PROFILES: ReadonlyArray<LearningProfileSeed> = [
         tts: true,
       },
       instructions:
-        "Reescreva a atividade em linguagem simples e clara, adequada a " +
+        "Reescreva a homework em linguagem simples e clara, adequada a " +
         "estudantes com dificuldades de leitura (ex.: dislexia). Produza um " +
         "glossário com os termos mais complexos e prepare o texto " +
         "simplificado para síntese de voz (TTS).",
@@ -106,7 +106,7 @@ const LEARNING_PROFILES: ReadonlyArray<LearningProfileSeed> = [
         visualStructure: true,
       },
       instructions:
-        "Fragmente a atividade em microtarefas sequenciais e curtas. Use " +
+        "Fragmente a homework em microtarefas sequenciais e curtas. Use " +
         "estrutura visual explícita (passos numerados, listas, destaques) " +
         "para reduzir a carga cognitiva e facilitar o acompanhamento.",
     },

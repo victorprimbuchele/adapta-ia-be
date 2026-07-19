@@ -1,8 +1,8 @@
 /**
- * Atividade (Homework) — material criado pelo professor via formulário
- * estruturado (ver Épico 4, BE-E4.1). A geradora nasce como rascunho
- * (`isDraft = true`) sem vínculo a outra homework nem a perfil de
- * aprendizagem (`homeworkId` e `learningProfileId` nulos).
+ * Homework — material created by the teacher via the structured form
+ * (Epic 4, BE-E4.1). The generator is born as a draft (`isDraft = true`)
+ * with no link to another homework or learning profile (`homeworkId` and
+ * `learningProfileId` null).
  */
 export interface Homework {
   id: string;

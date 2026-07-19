@@ -5,7 +5,7 @@ import { classRouter } from "./modules/escola/adapters/http/class.routes.js";
 import { gradeRouter } from "./modules/escola/adapters/http/grade.routes.js";
 import { schoolRouter } from "./modules/escola/adapters/http/school.routes.js";
 import { studentRouter } from "./modules/escola/adapters/http/student.routes.js";
-import { atividadeRouter } from "./modules/material/adapters/http/atividade.routes.js";
+import { homeworkRouter } from "./modules/material/adapters/http/homework.routes.js";
 import { authRouter } from "./modules/usuario/adapters/http/auth.routes.js";
 import { userRouter } from "./modules/usuario/adapters/http/user.routes.js";
 
@@ -26,7 +26,7 @@ app.use(`${API_PREFIX}/escolas`, schoolRouter);
 app.use(`${API_PREFIX}/series`, gradeRouter);
 app.use(`${API_PREFIX}/turmas`, classRouter);
 app.use(`${API_PREFIX}/alunos`, studentRouter);
-app.use(`${API_PREFIX}/atividades`, atividadeRouter);
+app.use(`${API_PREFIX}/homeworks`, homeworkRouter);
 
 app.use(errorHandler);
 
