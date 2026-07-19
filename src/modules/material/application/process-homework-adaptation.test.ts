@@ -7,7 +7,9 @@ import {
   HomeworkNotGeneratorError,
   InvalidLearningProfilePromptError,
 } from "../domain/errors.js";
+import { buildVariantSpeechText } from "./build-variant-speech-text.js";
 import { ProcessHomeworkAdaptation } from "./process-homework-adaptation.js";
+import { InMemoryAudioGenerator } from "./test-utils/in-memory-audio-generator.js";
 import { InMemoryHomeworkRepository } from "./test-utils/in-memory-homework-repository.js";
 import { InMemoryTextSimplifier } from "./test-utils/in-memory-text-simplifier.js";
 
@@ -64,10 +66,12 @@ async function buildScenario(overrides?: { profile?: LearningProfile }) {
     profile,
   ]);
   const textSimplifier = new InMemoryTextSimplifier();
+  const audioGenerator = new InMemoryAudioGenerator();
   const processHomeworkAdaptation = new ProcessHomeworkAdaptation(
     homeworkRepository,
     learningProfileRepository,
     textSimplifier,
+    audioGenerator,
   );
 
   const generator = await homeworkRepository.createGenerator({
@@ -81,6 +85,7 @@ async function buildScenario(overrides?: { profile?: LearningProfile }) {
     generator,
     homeworkRepository,
     textSimplifier,
+    audioGenerator,
     processHomeworkAdaptation,
   };
 }
@@ -95,7 +100,7 @@ describe("ProcessHomeworkAdaptation", () => {
     } = await buildScenario();
     const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
 
-    const variant = await processHomeworkAdaptation.execute({
+    const { homework: variant } = await processHomeworkAdaptation.execute({
       homeworkId: generator.id,
       learningProfileId: PROFILE_P1.id,
       teacherId: "teacher-1",
@@ -128,6 +133,54 @@ describe("ProcessHomeworkAdaptation", () => {
     logSpy.mockRestore();
   });
 
+  it("gera áudio TTS a partir do texto da variante quando o perfil pede (BE-E5.6)", async () => {
+    const {
+      generator,
+      textSimplifier,
+      audioGenerator,
+      processHomeworkAdaptation,
+    } = await buildScenario();
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+
+    const { homework: variant, audio } =
+      await processHomeworkAdaptation.execute({
+        homeworkId: generator.id,
+        learningProfileId: PROFILE_P1.id,
+        teacherId: "teacher-1",
+      });
+
+    expect(audio).toEqual(audioGenerator.result);
+    expect(audioGenerator.calls).toEqual([
+      {
+        text: buildVariantSpeechText({
+          title: textSimplifier.result.title,
+          content: textSimplifier.result.content,
+        }),
+      },
+    ]);
+    expect(audioGenerator.calls[0]?.text).toContain(variant.title);
+    expect(audioGenerator.calls[0]?.text).toContain(variant.content);
+
+    logSpy.mockRestore();
+  });
+
+  it("não chama TTS quando o perfil não pede áudio", async () => {
+    const { generator, audioGenerator, processHomeworkAdaptation } =
+      await buildScenario({ profile: PROFILE_P2 });
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+
+    const { audio } = await processHomeworkAdaptation.execute({
+      homeworkId: generator.id,
+      learningProfileId: PROFILE_P2.id,
+      teacherId: "teacher-1",
+    });
+
+    expect(audio).toBeNull();
+    expect(audioGenerator.calls).toHaveLength(0);
+
+    logSpy.mockRestore();
+  });
+
   it("atualiza a mesma variante no reprocessamento do par geradora+perfil", async () => {
     const {
       generator,
@@ -137,7 +190,7 @@ describe("ProcessHomeworkAdaptation", () => {
     } = await buildScenario();
     const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
 
-    const first = await processHomeworkAdaptation.execute({
+    const { homework: first } = await processHomeworkAdaptation.execute({
       homeworkId: generator.id,
       learningProfileId: PROFILE_P1.id,
       teacherId: "teacher-1",
@@ -149,7 +202,7 @@ describe("ProcessHomeworkAdaptation", () => {
       glossary: [{ term: "novo", definition: "termo atualizado" }],
     };
 
-    const second = await processHomeworkAdaptation.execute({
+    const { homework: second } = await processHomeworkAdaptation.execute({
       homeworkId: generator.id,
       learningProfileId: PROFILE_P1.id,
       teacherId: "teacher-1",
@@ -179,12 +232,12 @@ describe("ProcessHomeworkAdaptation", () => {
     } = await buildScenario();
     const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
 
-    const variantP1 = await processHomeworkAdaptation.execute({
+    const { homework: variantP1 } = await processHomeworkAdaptation.execute({
       homeworkId: generator.id,
       learningProfileId: PROFILE_P1.id,
       teacherId: "teacher-1",
     });
-    const variantP2 = await processHomeworkAdaptation.execute({
+    const { homework: variantP2 } = await processHomeworkAdaptation.execute({
       homeworkId: generator.id,
       learningProfileId: PROFILE_P2.id,
       teacherId: "teacher-1",
@@ -217,7 +270,7 @@ describe("ProcessHomeworkAdaptation", () => {
     } = await buildScenario({ profile: PROFILE_P2 });
     const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
 
-    const variant = await processHomeworkAdaptation.execute({
+    const { homework: variant } = await processHomeworkAdaptation.execute({
       homeworkId: generator.id,
       learningProfileId: PROFILE_P2.id,
       teacherId: "teacher-1",
@@ -234,7 +287,8 @@ describe("ProcessHomeworkAdaptation", () => {
   });
 
   it("rejeita homework inexistente", async () => {
-    const { processHomeworkAdaptation, textSimplifier } = await buildScenario();
+    const { processHomeworkAdaptation, textSimplifier, audioGenerator } =
+      await buildScenario();
 
     await expect(
       processHomeworkAdaptation.execute({
@@ -244,11 +298,16 @@ describe("ProcessHomeworkAdaptation", () => {
       }),
     ).rejects.toBeInstanceOf(HomeworkNotFoundError);
     expect(textSimplifier.calls).toHaveLength(0);
+    expect(audioGenerator.calls).toHaveLength(0);
   });
 
   it("nega acesso quando a homework é de outro professor", async () => {
-    const { generator, processHomeworkAdaptation, textSimplifier } =
-      await buildScenario();
+    const {
+      generator,
+      processHomeworkAdaptation,
+      textSimplifier,
+      audioGenerator,
+    } = await buildScenario();
 
     await expect(
       processHomeworkAdaptation.execute({
@@ -258,6 +317,7 @@ describe("ProcessHomeworkAdaptation", () => {
       }),
     ).rejects.toBeInstanceOf(HomeworkAccessDeniedError);
     expect(textSimplifier.calls).toHaveLength(0);
+    expect(audioGenerator.calls).toHaveLength(0);
   });
 
   it("rejeita quando a homework não é geradora", async () => {
@@ -266,6 +326,7 @@ describe("ProcessHomeworkAdaptation", () => {
       homeworkRepository,
       processHomeworkAdaptation,
       textSimplifier,
+      audioGenerator,
     } = await buildScenario();
 
     const now = new Date();
@@ -291,11 +352,16 @@ describe("ProcessHomeworkAdaptation", () => {
       }),
     ).rejects.toBeInstanceOf(HomeworkNotGeneratorError);
     expect(textSimplifier.calls).toHaveLength(0);
+    expect(audioGenerator.calls).toHaveLength(0);
   });
 
   it("rejeita perfil inexistente", async () => {
-    const { generator, processHomeworkAdaptation, textSimplifier } =
-      await buildScenario();
+    const {
+      generator,
+      processHomeworkAdaptation,
+      textSimplifier,
+      audioGenerator,
+    } = await buildScenario();
 
     await expect(
       processHomeworkAdaptation.execute({
@@ -305,17 +371,22 @@ describe("ProcessHomeworkAdaptation", () => {
       }),
     ).rejects.toBeInstanceOf(LearningProfileNotFoundError);
     expect(textSimplifier.calls).toHaveLength(0);
+    expect(audioGenerator.calls).toHaveLength(0);
   });
 
   it("rejeita prompt de perfil inválido", async () => {
-    const { generator, processHomeworkAdaptation, textSimplifier } =
-      await buildScenario({
-        profile: {
-          id: "profile-bad",
-          name: "Perfil quebrado",
-          prompt: { code: "X" },
-        },
-      });
+    const {
+      generator,
+      processHomeworkAdaptation,
+      textSimplifier,
+      audioGenerator,
+    } = await buildScenario({
+      profile: {
+        id: "profile-bad",
+        name: "Perfil quebrado",
+        prompt: { code: "X" },
+      },
+    });
 
     await expect(
       processHomeworkAdaptation.execute({
@@ -325,5 +396,6 @@ describe("ProcessHomeworkAdaptation", () => {
       }),
     ).rejects.toBeInstanceOf(InvalidLearningProfilePromptError);
     expect(textSimplifier.calls).toHaveLength(0);
+    expect(audioGenerator.calls).toHaveLength(0);
   });
 });

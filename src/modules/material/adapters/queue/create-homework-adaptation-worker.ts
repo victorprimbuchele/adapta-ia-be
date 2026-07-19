@@ -8,10 +8,12 @@ import type { HomeworkAdaptationJob } from "../../ports/adaptation-queue.js";
 import { HOMEWORK_ADAPTATION_QUEUE } from "../../ports/adaptation-queue.js";
 import { OpenAiCompatibleTextSimplifier } from "../llm/openai-compatible-text-simplifier.js";
 import { PrismaHomeworkRepository } from "../persistence/prisma-homework-repository.js";
+import { OpenAiCompatibleAudioGenerator } from "../tts/openai-compatible-audio-generator.js";
 
 /**
- * Cria o worker BullMQ que consome `homework-adaptation` (BE-E5.2 / BE-E5.3).
- * O processo HTTP só enfileira; aqui a LLM adapta o texto em background.
+ * Cria o worker BullMQ que consome `homework-adaptation` (BE-E5.2–E5.6).
+ * O processo HTTP só enfileira; aqui a LLM adapta o texto e o TTS gera
+ * áudio da variante quando o perfil pede.
  */
 export function createHomeworkAdaptationWorker(
   processHomeworkAdaptation: ProcessHomeworkAdaptation = createDefaultProcessor(),
@@ -49,5 +51,6 @@ function createDefaultProcessor(): ProcessHomeworkAdaptation {
     new PrismaHomeworkRepository(prisma),
     new PrismaLearningProfileRepository(prisma),
     new OpenAiCompatibleTextSimplifier(),
+    new OpenAiCompatibleAudioGenerator(),
   );
 }

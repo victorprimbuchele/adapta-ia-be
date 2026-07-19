@@ -9,24 +9,38 @@ import {
 } from "../domain/errors.js";
 import type { Homework } from "../domain/homework.js";
 import type { HomeworkAdaptationJob } from "../ports/adaptation-queue.js";
+import type {
+  AudioGeneratorPort,
+  GeneratedAudio,
+} from "../ports/audio-generator.js";
 import type { HomeworkRepository } from "../ports/homework-repository.js";
 import type { TextSimplifierPort } from "../ports/text-simplifier.js";
 import { authorizeHomeworkOwner } from "./authorize-homework-owner.js";
+import { buildVariantSpeechText } from "./build-variant-speech-text.js";
 import { resolveAdaptationGlossary } from "./resolve-adaptation-glossary.js";
 
+export interface ProcessHomeworkAdaptationResult {
+  homework: Homework;
+  /** Áudio TTS da variante quando o perfil pede (BE-E5.6); upload em BE-E5.7. */
+  audio: GeneratedAudio | null;
+}
+
 /**
- * Consome um job de adaptação (Épico 5, BE-E5.2–E5.5 / ADR 006).
- * Chama a LLM, resolve o glossário estruturado e persiste a Homework
- * variante vinculada à geradora e ao perfil (`upsertAdaptation`).
+ * Consome um job de adaptação (Épico 5, BE-E5.2–E5.6 / ADR 006).
+ * Chama a LLM, resolve o glossário, persiste a Homework variante e gera
+ * áudio TTS a partir do texto da variante quando o perfil pede.
  */
 export class ProcessHomeworkAdaptation {
   constructor(
     private readonly homeworkRepository: HomeworkRepository,
     private readonly learningProfileRepository: LearningProfileRepository,
     private readonly textSimplifier: TextSimplifierPort,
+    private readonly audioGenerator: AudioGeneratorPort,
   ) {}
 
-  async execute(job: HomeworkAdaptationJob): Promise<Homework> {
+  async execute(
+    job: HomeworkAdaptationJob,
+  ): Promise<ProcessHomeworkAdaptationResult> {
     const homework = await authorizeHomeworkOwner(
       this.homeworkRepository,
       job.homeworkId,
@@ -77,12 +91,19 @@ export class ProcessHomeworkAdaptation {
       teacherId: job.teacherId,
     });
 
+    const audio = profilePrompt.adaptations.tts
+      ? await this.audioGenerator.generate({
+          text: buildVariantSpeechText(variant),
+        })
+      : null;
+
     console.log(
       `[adaptation] saved variant=${variant.id} homework=${job.homeworkId} ` +
         `profile=${job.learningProfileId} code=${profilePrompt.code} ` +
-        `glossaryEntries=${glossary?.length ?? 0}`,
+        `glossaryEntries=${glossary?.length ?? 0} ` +
+        `audioBytes=${audio?.data.length ?? 0}`,
     );
 
-    return variant;
+    return { homework: variant, audio };
   }
 }

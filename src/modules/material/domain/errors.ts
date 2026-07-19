@@ -94,3 +94,12 @@ export class LlmAdaptationError extends AppError {
     super(message, 502, "LLM_ADAPTATION_FAILED");
   }
 }
+
+/**
+ * Falha na chamada à API de TTS (Epic 5, BE-E5.6).
+ */
+export class TtsAdaptationError extends AppError {
+  constructor(message: string) {
+    super(message, 502, "TTS_ADAPTATION_FAILED");
+  }
+}
