@@ -2,8 +2,10 @@ import type { Request, Response } from "express";
 
 import { getAuthenticatedUser } from "../../../../shared/auth/authenticate.js";
 import type { CreateGeneratorHomework } from "../../application/create-generator-homework.js";
+import type { EnqueueHomeworkAdaptation } from "../../application/enqueue-homework-adaptation.js";
 import type { GetHomeworkDetail } from "../../application/get-homework-detail.js";
 import type { UpdateDraftHomework } from "../../application/update-draft-homework.js";
+import { adaptHomeworkSchema } from "./adapt-homework.dto.js";
 import { createHomeworkSchema } from "./create-homework.dto.js";
 import { updateHomeworkSchema } from "./update-homework.dto.js";
 
@@ -12,6 +14,7 @@ export class HomeworkController {
     private readonly createGeneratorHomework: CreateGeneratorHomework,
     private readonly updateDraftHomework: UpdateDraftHomework,
     private readonly getHomeworkDetail: GetHomeworkDetail,
+    private readonly enqueueHomeworkAdaptation: EnqueueHomeworkAdaptation,
   ) {}
 
   create = async (req: Request, res: Response): Promise<void> => {
@@ -55,5 +58,20 @@ export class HomeworkController {
     });
 
     res.status(200).json(homework);
+  };
+
+  adapt = async (req: Request, res: Response): Promise<void> => {
+    // Enqueues adaptation jobs and returns immediately (BE-E5.1).
+    const id = req.params["id"] as string;
+    const { learningProfileIds } = adaptHomeworkSchema.parse(req.body ?? {});
+    const { sub: teacherId } = getAuthenticatedUser(req);
+
+    const result = await this.enqueueHomeworkAdaptation.execute({
+      homeworkId: id,
+      teacherId,
+      learningProfileIds,
+    });
+
+    res.status(202).json(result);
   };
 }

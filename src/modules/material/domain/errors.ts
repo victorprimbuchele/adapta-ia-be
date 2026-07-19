@@ -45,3 +45,29 @@ export class HomeworkNotDraftError extends AppError {
     );
   }
 }
+
+/**
+ * Only generator homeworks can be adapted (Epic 5, BE-E5.1).
+ */
+export class HomeworkNotGeneratorError extends AppError {
+  constructor(homeworkId: string) {
+    super(
+      `Homework "${homeworkId}" não é uma geradora e não pode ser adaptada.`,
+      409,
+      "HOMEWORK_NOT_GENERATOR",
+    );
+  }
+}
+
+/**
+ * No learning profiles available to enqueue adaptations for (Epic 5, BE-E5.1).
+ */
+export class NoLearningProfilesToAdaptError extends AppError {
+  constructor(homeworkId: string) {
+    super(
+      `Nenhum perfil de aprendizagem disponível para adaptar a homework "${homeworkId}".`,
+      422,
+      "NO_LEARNING_PROFILES_TO_ADAPT",
+    );
+  }
+}
