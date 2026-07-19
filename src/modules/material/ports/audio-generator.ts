@@ -1,6 +1,6 @@
 /**
  * Áudio gerado via TTS a partir do texto da variante (Épico 5, BE-E5.6).
- * O upload/registro em `File` fica para BE-E5.7.
+ * Em seguida é enviado ao storage e registrado em `File` (BE-E5.7).
  */
 export interface GeneratedAudio {
   data: Buffer;

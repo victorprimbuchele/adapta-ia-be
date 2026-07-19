@@ -10,7 +10,9 @@ import {
 import { buildVariantSpeechText } from "./build-variant-speech-text.js";
 import { ProcessHomeworkAdaptation } from "./process-homework-adaptation.js";
 import { InMemoryAudioGenerator } from "./test-utils/in-memory-audio-generator.js";
+import { InMemoryFileRepository } from "./test-utils/in-memory-file-repository.js";
 import { InMemoryHomeworkRepository } from "./test-utils/in-memory-homework-repository.js";
+import { InMemoryObjectStorage } from "./test-utils/in-memory-object-storage.js";
 import { InMemoryTextSimplifier } from "./test-utils/in-memory-text-simplifier.js";
 
 const PROFILE_P1: LearningProfile = {
@@ -67,11 +69,15 @@ async function buildScenario(overrides?: { profile?: LearningProfile }) {
   ]);
   const textSimplifier = new InMemoryTextSimplifier();
   const audioGenerator = new InMemoryAudioGenerator();
+  const objectStorage = new InMemoryObjectStorage();
+  const fileRepository = new InMemoryFileRepository();
   const processHomeworkAdaptation = new ProcessHomeworkAdaptation(
     homeworkRepository,
     learningProfileRepository,
     textSimplifier,
     audioGenerator,
+    objectStorage,
+    fileRepository,
   );
 
   const generator = await homeworkRepository.createGenerator({
@@ -86,6 +92,8 @@ async function buildScenario(overrides?: { profile?: LearningProfile }) {
     homeworkRepository,
     textSimplifier,
     audioGenerator,
+    objectStorage,
+    fileRepository,
     processHomeworkAdaptation,
   };
 }
@@ -164,19 +172,64 @@ describe("ProcessHomeworkAdaptation", () => {
     logSpy.mockRestore();
   });
 
-  it("não chama TTS quando o perfil não pede áudio", async () => {
-    const { generator, audioGenerator, processHomeworkAdaptation } =
-      await buildScenario({ profile: PROFILE_P2 });
+  it("faz upload do áudio e vincula audioFileId a File tipo audio (BE-E5.7)", async () => {
+    const {
+      generator,
+      audioGenerator,
+      objectStorage,
+      fileRepository,
+      processHomeworkAdaptation,
+    } = await buildScenario();
     const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
 
-    const { audio } = await processHomeworkAdaptation.execute({
+    const { homework: variant } = await processHomeworkAdaptation.execute({
       homeworkId: generator.id,
-      learningProfileId: PROFILE_P2.id,
+      learningProfileId: PROFILE_P1.id,
       teacherId: "teacher-1",
     });
 
+    expect(variant.audioFileId).not.toBeNull();
+    expect(objectStorage.calls).toHaveLength(1);
+    expect(objectStorage.calls[0]).toMatchObject({
+      key: `homeworks/${variant.id}/audio.mp3`,
+      data: audioGenerator.result.data,
+      mimeType: "audio/mpeg",
+    });
+
+    const file = await fileRepository.findById(variant.audioFileId!);
+    expect(file).toMatchObject({
+      id: variant.audioFileId,
+      type: "audio",
+      path: `homeworks/${variant.id}/audio.mp3`,
+      mimeType: "audio/mpeg",
+      sizeBytes: audioGenerator.result.data.length,
+    });
+
+    logSpy.mockRestore();
+  });
+
+  it("não chama TTS nem storage quando o perfil não pede áudio", async () => {
+    const {
+      generator,
+      audioGenerator,
+      objectStorage,
+      fileRepository,
+      processHomeworkAdaptation,
+    } = await buildScenario({ profile: PROFILE_P2 });
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+
+    const { homework: variant, audio } =
+      await processHomeworkAdaptation.execute({
+        homeworkId: generator.id,
+        learningProfileId: PROFILE_P2.id,
+        teacherId: "teacher-1",
+      });
+
     expect(audio).toBeNull();
+    expect(variant.audioFileId).toBeNull();
     expect(audioGenerator.calls).toHaveLength(0);
+    expect(objectStorage.calls).toHaveLength(0);
+    expect(fileRepository.files).toHaveLength(0);
 
     logSpy.mockRestore();
   });
@@ -216,6 +269,7 @@ describe("ProcessHomeworkAdaptation", () => {
       homeworkId: generator.id,
       learningProfileId: PROFILE_P1.id,
     });
+    expect(second.audioFileId).not.toBeNull();
     expect(homeworkRepository.homeworks).toHaveLength(2);
     await expect(
       homeworkRepository.findAdaptationsByHomeworkId(generator.id),
@@ -287,8 +341,12 @@ describe("ProcessHomeworkAdaptation", () => {
   });
 
   it("rejeita homework inexistente", async () => {
-    const { processHomeworkAdaptation, textSimplifier, audioGenerator } =
-      await buildScenario();
+    const {
+      processHomeworkAdaptation,
+      textSimplifier,
+      audioGenerator,
+      objectStorage,
+    } = await buildScenario();
 
     await expect(
       processHomeworkAdaptation.execute({
@@ -299,6 +357,7 @@ describe("ProcessHomeworkAdaptation", () => {
     ).rejects.toBeInstanceOf(HomeworkNotFoundError);
     expect(textSimplifier.calls).toHaveLength(0);
     expect(audioGenerator.calls).toHaveLength(0);
+    expect(objectStorage.calls).toHaveLength(0);
   });
 
   it("nega acesso quando a homework é de outro professor", async () => {
@@ -338,6 +397,7 @@ describe("ProcessHomeworkAdaptation", () => {
       isDraft: false,
       homeworkId: generator.id,
       learningProfileId: PROFILE_P1.id,
+      audioFileId: null,
       classId: "class-1",
       teacherId: "teacher-1",
       createdAt: now,

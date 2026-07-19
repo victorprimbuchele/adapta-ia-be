@@ -75,6 +75,7 @@ describe("ListClassHomeworks", () => {
       isDraft: false,
       homeworkId: newer.id,
       learningProfileId: "profile-1",
+      audioFileId: null,
       classId: createdClass.id,
       teacherId: "teacher-1",
       createdAt: now,

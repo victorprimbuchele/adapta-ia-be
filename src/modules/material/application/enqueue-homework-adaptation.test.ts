@@ -174,6 +174,7 @@ describe("EnqueueHomeworkAdaptation", () => {
       isDraft: false,
       homeworkId: generator.id,
       learningProfileId: PROFILE_P1.id,
+      audioFileId: null,
       classId: "class-1",
       teacherId: "teacher-1",
       createdAt: now,

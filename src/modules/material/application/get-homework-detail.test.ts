@@ -27,6 +27,7 @@ describe("GetHomeworkDetail", () => {
       isDraft: true,
       homeworkId: null,
       learningProfileId: null,
+      audioFileId: null,
       adaptations: [],
     });
   });
@@ -52,6 +53,7 @@ describe("GetHomeworkDetail", () => {
         isDraft: false,
         homeworkId: generator.id,
         learningProfileId: "profile-1",
+        audioFileId: null,
         classId: "class-1",
         teacherId: "teacher-1",
         createdAt: now,
@@ -65,6 +67,7 @@ describe("GetHomeworkDetail", () => {
         isDraft: false,
         homeworkId: generator.id,
         learningProfileId: "profile-2",
+        audioFileId: null,
         classId: "class-1",
         teacherId: "teacher-1",
         createdAt: new Date(now.getTime() + 1000),
