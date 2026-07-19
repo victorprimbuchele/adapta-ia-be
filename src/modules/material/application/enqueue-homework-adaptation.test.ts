@@ -1,4 +1,4 @@
-import { EnqueueHomeworkAdaptation } from "./enqueue-homework-adaptation.js";
+import { InMemoryIdempotency } from "../../../shared/application/test-utils/in-memory-idempotency.js";
 import { LearningProfileNotFoundError } from "../../escola/domain/errors.js";
 import type { LearningProfile } from "../../escola/domain/learning-profile.js";
 import { InMemoryLearningProfileRepository } from "../../escola/application/test-utils/in-memory-learning-profile-repository.js";
@@ -10,6 +10,8 @@ import {
   HomeworkNotGeneratorError,
   NoLearningProfilesToAdaptError,
 } from "../domain/errors.js";
+import { adaptationIdempotencyKey } from "./adaptation-idempotency-key.js";
+import { EnqueueHomeworkAdaptation } from "./enqueue-homework-adaptation.js";
 import { InMemoryAdaptationQueue } from "./test-utils/in-memory-adaptation-queue.js";
 import { InMemoryHomeworkRepository } from "./test-utils/in-memory-homework-repository.js";
 
@@ -35,12 +37,15 @@ async function buildScenario() {
   const userLearningProfileRepository =
     new InMemoryUserLearningProfileRepository(learningProfileRepository);
   const adaptationQueue = new InMemoryAdaptationQueue();
+  const idempotency = new InMemoryIdempotency();
   const enqueueHomeworkAdaptation = new EnqueueHomeworkAdaptation(
     homeworkRepository,
     userClassRepository,
     userLearningProfileRepository,
     learningProfileRepository,
     adaptationQueue,
+    idempotency,
+    60,
   );
 
   const generator = await homeworkRepository.createGenerator({
@@ -56,6 +61,7 @@ async function buildScenario() {
     userClassRepository,
     userLearningProfileRepository,
     adaptationQueue,
+    idempotency,
     enqueueHomeworkAdaptation,
   };
 }
@@ -94,6 +100,7 @@ describe("EnqueueHomeworkAdaptation", () => {
     expect(result).toEqual({
       homeworkId: generator.id,
       enqueuedLearningProfileIds: [PROFILE_P1.id, PROFILE_P2.id],
+      skippedLearningProfileIds: [],
     });
     expect(adaptationQueue.jobs).toEqual([
       {
@@ -120,6 +127,7 @@ describe("EnqueueHomeworkAdaptation", () => {
     });
 
     expect(result.enqueuedLearningProfileIds).toEqual([PROFILE_P2.id]);
+    expect(result.skippedLearningProfileIds).toEqual([]);
     expect(adaptationQueue.jobs).toEqual([
       {
         homeworkId: generator.id,
@@ -127,6 +135,69 @@ describe("EnqueueHomeworkAdaptation", () => {
         teacherId: "teacher-1",
       },
     ]);
+  });
+
+  it("requisição duplicada não enfileira segunda variante do mesmo par (BE-E5.8)", async () => {
+    const {
+      generator,
+      adaptationQueue,
+      idempotency,
+      enqueueHomeworkAdaptation,
+    } = await buildScenario();
+
+    const first = await enqueueHomeworkAdaptation.execute({
+      homeworkId: generator.id,
+      teacherId: "teacher-1",
+      learningProfileIds: [PROFILE_P1.id, PROFILE_P2.id],
+    });
+    const second = await enqueueHomeworkAdaptation.execute({
+      homeworkId: generator.id,
+      teacherId: "teacher-1",
+      learningProfileIds: [PROFILE_P1.id, PROFILE_P2.id],
+    });
+
+    expect(first.enqueuedLearningProfileIds).toEqual([
+      PROFILE_P1.id,
+      PROFILE_P2.id,
+    ]);
+    expect(second).toEqual({
+      homeworkId: generator.id,
+      enqueuedLearningProfileIds: [],
+      skippedLearningProfileIds: [PROFILE_P1.id, PROFILE_P2.id],
+    });
+    expect(adaptationQueue.jobs).toHaveLength(2);
+    expect(
+      idempotency.keys.has(
+        adaptationIdempotencyKey(generator.id, PROFILE_P1.id),
+      ),
+    ).toBe(true);
+  });
+
+  it("enfileira só o perfil ainda sem chave de idempotência", async () => {
+    const { generator, adaptationQueue, enqueueHomeworkAdaptation } =
+      await buildScenario();
+
+    await enqueueHomeworkAdaptation.execute({
+      homeworkId: generator.id,
+      teacherId: "teacher-1",
+      learningProfileIds: [PROFILE_P1.id],
+    });
+
+    const result = await enqueueHomeworkAdaptation.execute({
+      homeworkId: generator.id,
+      teacherId: "teacher-1",
+      learningProfileIds: [PROFILE_P1.id, PROFILE_P2.id],
+    });
+
+    expect(result).toEqual({
+      homeworkId: generator.id,
+      enqueuedLearningProfileIds: [PROFILE_P2.id],
+      skippedLearningProfileIds: [PROFILE_P1.id],
+    });
+    expect(adaptationQueue.jobs).toHaveLength(2);
+    expect(adaptationQueue.jobs[1]).toMatchObject({
+      learningProfileId: PROFILE_P2.id,
+    });
   });
 
   it("rejeita quando a homework não existe", async () => {

@@ -1,6 +1,6 @@
 /**
- * Opções de conexão Redis para BullMQ (ADR 006) e futuros adapters de
- * idempotência (ADR 005). `maxRetriesPerRequest: null` é exigido pelo BullMQ.
+ * Opções de conexão Redis para BullMQ (ADR 006) e idempotência (ADR 005 /
+ * BE-E5.8). `maxRetriesPerRequest: null` é exigido pelo BullMQ.
  */
 export function getRedisConnectionOptions(): {
   host: string;

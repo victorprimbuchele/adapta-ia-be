@@ -26,11 +26,13 @@ LLM_API_KEY="sk-..."
 # TTS_VOICE="nova"
 # Storage local do áudio TTS (BE-E5.7; default: ./storage)
 # STORAGE_PATH="./storage"
+# Idempotência Redis do par atividade+perfil (BE-E5.8 / ADR 005; default: 24h)
+# ADAPTATION_IDEMPOTENCY_TTL_SECONDS="86400"
 ```
 
 > Se a API/worker rodarem **no host** (fora do Docker) e só o Postgres/Redis estiverem no Compose, use `localhost` no lugar de `postgres` e `redis`.
 >
-> `LLM_API_KEY` é exigida pelo **worker** (adaptação via LLM — BE-E5.3; TTS — BE-E5.6, com fallback da mesma chave). O áudio TTS é gravado em filesystem local (`STORAGE_PATH`) com registro em `File` (BE-E5.7). A API só enfileira jobs e não chama a LLM/TTS.
+> `LLM_API_KEY` é exigida pelo **worker** (adaptação via LLM — BE-E5.3; TTS — BE-E5.6, com fallback da mesma chave). O áudio TTS é gravado em filesystem local (`STORAGE_PATH`) com registro em `File` (BE-E5.7). A API usa Redis para não reenfileirar o mesmo par atividade+perfil (BE-E5.8). A API só enfileira jobs e não chama a LLM/TTS.
 
 ## Subir com Docker (recomendado)
 

@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import { authenticate } from "../../../../shared/auth/authenticate.js";
+import { RedisIdempotency } from "../../../../shared/adapters/redis-idempotency.js";
 import { asyncHandler } from "../../../../shared/http/async-handler.js";
 import { prisma } from "../../../../shared/infra/prisma-client.js";
 import { PrismaClassRepository } from "../../../escola/adapters/persistence/prisma-class-repository.js";
@@ -25,6 +26,7 @@ const userLearningProfileRepository = new PrismaUserLearningProfileRepository(
 );
 const learningProfileRepository = new PrismaLearningProfileRepository(prisma);
 const adaptationQueue = new BullMqAdaptationQueue();
+const idempotency = new RedisIdempotency();
 
 const createGeneratorHomework = new CreateGeneratorHomework(
   homeworkRepository,
@@ -39,6 +41,7 @@ const enqueueHomeworkAdaptation = new EnqueueHomeworkAdaptation(
   userLearningProfileRepository,
   learningProfileRepository,
   adaptationQueue,
+  idempotency,
 );
 const homeworkController = new HomeworkController(
   createGeneratorHomework,
