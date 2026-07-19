@@ -71,3 +71,26 @@ export class NoLearningProfilesToAdaptError extends AppError {
     );
   }
 }
+
+/**
+ * `LearningProfile.prompt` no banco não segue o shape esperado pela skill
+ * de adaptação (Epic 5, BE-E5.3).
+ */
+export class InvalidLearningProfilePromptError extends AppError {
+  constructor(learningProfileId: string) {
+    super(
+      `Prompt do perfil de aprendizagem "${learningProfileId}" é inválido.`,
+      422,
+      "INVALID_LEARNING_PROFILE_PROMPT",
+    );
+  }
+}
+
+/**
+ * Falha na chamada ou no parse da resposta da LLM (Epic 5, BE-E5.3).
+ */
+export class LlmAdaptationError extends AppError {
+  constructor(message: string) {
+    super(message, 502, "LLM_ADAPTATION_FAILED");
+  }
+}
