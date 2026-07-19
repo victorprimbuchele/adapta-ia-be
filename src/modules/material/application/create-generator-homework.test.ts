@@ -5,6 +5,7 @@ import {
 } from "../../escola/domain/errors.js";
 import { InMemoryClassRepository } from "../../escola/application/test-utils/in-memory-class-repository.js";
 import { TeacherNotFoundError } from "../domain/errors.js";
+import { generatorHasNoLearningProfile } from "../domain/generator-homework.js";
 import { InMemoryHomeworkRepository } from "./test-utils/in-memory-homework-repository.js";
 import { InMemoryTeacherRepository } from "./test-utils/in-memory-teacher-repository.js";
 
@@ -45,6 +46,7 @@ describe("CreateGeneratorHomework", () => {
       learningProfileId: null,
       audioFileId: null,
     });
+    expect(generatorHasNoLearningProfile(homework)).toBe(true);
     expect(homeworkRepository.homeworks).toHaveLength(1);
   });
 
