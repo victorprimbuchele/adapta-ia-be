@@ -8,7 +8,7 @@ import type {
 
 /**
  * Implementação de `HomeworkRepository` sobre a tabela `homeworks`
- * (ver Épico 4, BE-E4.1 / BE-E4.3).
+ * (ver Épico 4, BE-E4.1 / BE-E4.3 / BE-E4.5).
  */
 export class PrismaHomeworkRepository implements HomeworkRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -18,6 +18,7 @@ export class PrismaHomeworkRepository implements HomeworkRepository {
       data: {
         title: data.title,
         content: data.content,
+        classId: data.classId,
         teacherId: data.teacherId,
         isDraft: true,
         homeworkId: null,
@@ -34,6 +35,16 @@ export class PrismaHomeworkRepository implements HomeworkRepository {
     return this.prisma.homework.findMany({
       where: { homeworkId },
       orderBy: { createdAt: "asc" },
+    });
+  }
+
+  async findGeneratorsByClassId(classId: string): Promise<Homework[]> {
+    return this.prisma.homework.findMany({
+      where: {
+        classId,
+        homeworkId: null,
+      },
+      orderBy: { createdAt: "desc" },
     });
   }
 

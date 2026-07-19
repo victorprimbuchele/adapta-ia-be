@@ -3,6 +3,8 @@ import { Router } from "express";
 import { authenticate } from "../../../../shared/auth/authenticate.js";
 import { asyncHandler } from "../../../../shared/http/async-handler.js";
 import { prisma } from "../../../../shared/infra/prisma-client.js";
+import { PrismaHomeworkRepository } from "../../../material/adapters/persistence/prisma-homework-repository.js";
+import { ListClassHomeworks } from "../../../material/application/list-class-homeworks.js";
 import { CreateClass } from "../../application/create-class.js";
 import { DeleteClass } from "../../application/delete-class.js";
 import { EnrollStudent } from "../../application/enroll-student.js";
@@ -28,6 +30,7 @@ const userClassRepository = new PrismaUserClassRepository(prisma);
 const userLearningProfileRepository = new PrismaUserLearningProfileRepository(
   prisma,
 );
+const homeworkRepository = new PrismaHomeworkRepository(prisma);
 const createClass = new CreateClass(
   classRepository,
   schoolRepository,
@@ -52,6 +55,10 @@ const removeStudentFromClass = new RemoveStudentFromClass(
   classRepository,
   userClassRepository,
 );
+const listClassHomeworks = new ListClassHomeworks(
+  classRepository,
+  homeworkRepository,
+);
 const classController = new ClassController(
   createClass,
   listClasses,
@@ -60,6 +67,7 @@ const classController = new ClassController(
   enrollStudent,
   listClassStudents,
   removeStudentFromClass,
+  listClassHomeworks,
 );
 
 export const classRouter = Router();
@@ -82,4 +90,9 @@ classRouter.delete(
   "/:id/alunos/:alunoId",
   authenticate,
   asyncHandler(classController.removeStudent),
+);
+classRouter.get(
+  "/:id/atividades",
+  authenticate,
+  asyncHandler(classController.listHomeworks),
 );

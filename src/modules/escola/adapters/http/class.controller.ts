@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 
 import { getAuthenticatedUser } from "../../../../shared/auth/authenticate.js";
+import type { ListClassHomeworks } from "../../../material/application/list-class-homeworks.js";
 import type { CreateClass } from "../../application/create-class.js";
 import type { DeleteClass } from "../../application/delete-class.js";
 import type { EnrollStudent } from "../../application/enroll-student.js";
@@ -20,6 +21,7 @@ export class ClassController {
     private readonly enrollStudent: EnrollStudent,
     private readonly listClassStudents: ListClassStudents,
     private readonly removeStudentFromClass: RemoveStudentFromClass,
+    private readonly listClassHomeworks: ListClassHomeworks,
   ) {}
 
   create = async (req: Request, res: Response): Promise<void> => {
@@ -84,6 +86,15 @@ export class ClassController {
     const students = await this.listClassStudents.execute(classId, teacherId);
 
     res.status(200).json(students);
+  };
+
+  listHomeworks = async (req: Request, res: Response): Promise<void> => {
+    const classId = req.params["id"] as string;
+    const { sub: teacherId } = getAuthenticatedUser(req);
+
+    const homeworks = await this.listClassHomeworks.execute(classId, teacherId);
+
+    res.status(200).json(homeworks);
   };
 
   removeStudent = async (req: Request, res: Response): Promise<void> => {

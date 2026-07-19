@@ -12,6 +12,7 @@ describe("UpdateDraftHomework", () => {
     const draft = await homeworkRepository.createGenerator({
       title: "Título original",
       content: "Conteúdo original",
+      classId: "class-1",
       teacherId: "teacher-1",
     });
     const updateDraftHomework = new UpdateDraftHomework(homeworkRepository);
@@ -27,6 +28,7 @@ describe("UpdateDraftHomework", () => {
       id: draft.id,
       title: "Título atualizado",
       content: "Conteúdo atualizado",
+      classId: "class-1",
       teacherId: "teacher-1",
       isDraft: true,
       homeworkId: null,
@@ -61,6 +63,7 @@ describe("UpdateDraftHomework", () => {
     const draft = await homeworkRepository.createGenerator({
       title: "Título original",
       content: "Conteúdo original",
+      classId: "class-1",
       teacherId: "teacher-1",
     });
     const updateDraftHomework = new UpdateDraftHomework(homeworkRepository);
@@ -85,6 +88,7 @@ describe("UpdateDraftHomework", () => {
     const draft = await homeworkRepository.createGenerator({
       title: "Título original",
       content: "Conteúdo original",
+      classId: "class-1",
       teacherId: "teacher-1",
     });
     const published = homeworkRepository.homeworks[0]!;

@@ -3,6 +3,7 @@ import type { Homework } from "../domain/homework.js";
 export interface CreateGeneratorHomeworkData {
   title: string;
   content: string;
+  classId: string;
   teacherId: string;
 }
 
@@ -25,6 +26,12 @@ export interface HomeworkRepository {
    * (`homeworkId` = id da geradora) — ver Épico 4, BE-E4.4.
    */
   findAdaptationsByHomeworkId(homeworkId: string): Promise<Homework[]>;
+
+  /**
+   * Lista as homeworks geradoras de uma turma (`classId`, `homeworkId`
+   * null) — ver Épico 4, BE-E4.5.
+   */
+  findGeneratorsByClassId(classId: string): Promise<Homework[]>;
 
   /**
    * Atualiza título e conteúdo de um rascunho existente. Não cria
