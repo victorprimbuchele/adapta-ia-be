@@ -4,6 +4,7 @@ import { authenticate } from "../../../../shared/auth/authenticate.js";
 import { asyncHandler } from "../../../../shared/http/async-handler.js";
 import { prisma } from "../../../../shared/infra/prisma-client.js";
 import { CreateGeneratorHomework } from "../../application/create-generator-homework.js";
+import { GetHomeworkDetail } from "../../application/get-homework-detail.js";
 import { UpdateDraftHomework } from "../../application/update-draft-homework.js";
 import { PrismaHomeworkRepository } from "../persistence/prisma-homework-repository.js";
 import { PrismaTeacherRepository } from "../persistence/prisma-teacher-repository.js";
@@ -16,9 +17,11 @@ const createGeneratorHomework = new CreateGeneratorHomework(
   teacherRepository,
 );
 const updateDraftHomework = new UpdateDraftHomework(homeworkRepository);
+const getHomeworkDetail = new GetHomeworkDetail(homeworkRepository);
 const homeworkController = new HomeworkController(
   createGeneratorHomework,
   updateDraftHomework,
+  getHomeworkDetail,
 );
 
 export const homeworkRouter = Router();
@@ -27,6 +30,12 @@ homeworkRouter.post(
   "/",
   authenticate,
   asyncHandler(homeworkController.create),
+);
+
+homeworkRouter.get(
+  "/:id",
+  authenticate,
+  asyncHandler(homeworkController.show),
 );
 
 homeworkRouter.patch(

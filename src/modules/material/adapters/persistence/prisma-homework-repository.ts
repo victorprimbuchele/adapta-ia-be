@@ -30,6 +30,13 @@ export class PrismaHomeworkRepository implements HomeworkRepository {
     return this.prisma.homework.findUnique({ where: { id } });
   }
 
+  async findAdaptationsByHomeworkId(homeworkId: string): Promise<Homework[]> {
+    return this.prisma.homework.findMany({
+      where: { homeworkId },
+      orderBy: { createdAt: "asc" },
+    });
+  }
+
   async updateDraft(
     id: string,
     data: UpdateDraftHomeworkData,

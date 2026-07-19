@@ -36,6 +36,12 @@ export class InMemoryHomeworkRepository implements HomeworkRepository {
     return this.homeworks.find((homework) => homework.id === id) ?? null;
   }
 
+  async findAdaptationsByHomeworkId(homeworkId: string): Promise<Homework[]> {
+    return this.homeworks
+      .filter((homework) => homework.homeworkId === homeworkId)
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  }
+
   async updateDraft(
     id: string,
     data: UpdateDraftHomeworkData,

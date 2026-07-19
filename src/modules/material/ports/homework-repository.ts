@@ -21,6 +21,12 @@ export interface HomeworkRepository {
   findById(id: string): Promise<Homework | null>;
 
   /**
+   * Lista as adaptações/variantes vinculadas a uma homework geradora
+   * (`homeworkId` = id da geradora) — ver Épico 4, BE-E4.4.
+   */
+  findAdaptationsByHomeworkId(homeworkId: string): Promise<Homework[]>;
+
+  /**
    * Atualiza título e conteúdo de um rascunho existente. Não cria
    * adaptações/variantes (ver Épico 4, BE-E4.3).
    */

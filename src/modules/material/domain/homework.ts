@@ -15,3 +15,11 @@ export interface Homework {
   createdAt: Date;
   updatedAt: Date;
 }
+
+/**
+ * Detalhe da homework (ver Épico 4, BE-E4.4), incluindo as adaptações/
+ * variantes vinculadas à geradora via `homeworkId`.
+ */
+export interface HomeworkDetail extends Homework {
+  adaptations: Homework[];
+}
