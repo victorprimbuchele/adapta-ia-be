@@ -77,6 +77,7 @@ model Class {
   teacher User   @relation(fields: [teacherId], references: [id])
 
   enrollments UserClass[]
+  homeworks   Homework[]
 
   @@index([schoolId])
   @@index([gradeId])
@@ -147,7 +148,8 @@ model UserLearningProfile {
 /// (Epic 4, BE-E4.1 / ADR 012). The "generator homework" is the original
 /// (`homeworkId` and `learningProfileId` null, `isDraft` true on create).
 /// Future adaptations point to the generator via `homeworkId` and carry
-/// the target profile's `learningProfileId`.
+/// the target profile's `learningProfileId`. Always linked to a class
+/// (`classId`) so activities can be listed per turma (BE-E4.5).
 model Homework {
   id                String   @id @default(cuid())
   title             String
@@ -155,6 +157,7 @@ model Homework {
   isDraft           Boolean  @default(true) @map("is_draft")
   homeworkId        String?  @map("homework_id")
   learningProfileId String?  @map("learning_profile_id")
+  classId           String   @map("class_id")
   teacherId         String   @map("teacher_id")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
@@ -162,10 +165,12 @@ model Homework {
   parentHomework  Homework?        @relation("HomeworkAdaptations", fields: [homeworkId], references: [id])
   adaptations     Homework[]       @relation("HomeworkAdaptations")
   learningProfile LearningProfile? @relation(fields: [learningProfileId], references: [id])
+  class           Class            @relation(fields: [classId], references: [id])
   teacher         User             @relation(fields: [teacherId], references: [id])
 
   @@index([teacherId])
   @@index([homeworkId])
   @@index([learningProfileId])
+  @@index([classId])
   @@map("homeworks")
 }

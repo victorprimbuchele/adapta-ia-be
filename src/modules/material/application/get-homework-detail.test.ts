@@ -11,6 +11,7 @@ describe("GetHomeworkDetail", () => {
     const generator = await homeworkRepository.createGenerator({
       title: "Frações equivalentes",
       content: "Conteúdo da geradora",
+      classId: "class-1",
       teacherId: "teacher-1",
     });
     const getHomeworkDetail = new GetHomeworkDetail(homeworkRepository);
@@ -21,6 +22,7 @@ describe("GetHomeworkDetail", () => {
       id: generator.id,
       title: "Frações equivalentes",
       content: "Conteúdo da geradora",
+      classId: "class-1",
       teacherId: "teacher-1",
       isDraft: true,
       homeworkId: null,
@@ -34,6 +36,7 @@ describe("GetHomeworkDetail", () => {
     const generator = await homeworkRepository.createGenerator({
       title: "Frações equivalentes",
       content: "Conteúdo da geradora",
+      classId: "class-1",
       teacherId: "teacher-1",
     });
 
@@ -46,6 +49,7 @@ describe("GetHomeworkDetail", () => {
         isDraft: false,
         homeworkId: generator.id,
         learningProfileId: "profile-1",
+        classId: "class-1",
         teacherId: "teacher-1",
         createdAt: now,
         updatedAt: now,
@@ -57,6 +61,7 @@ describe("GetHomeworkDetail", () => {
         isDraft: false,
         homeworkId: generator.id,
         learningProfileId: "profile-2",
+        classId: "class-1",
         teacherId: "teacher-1",
         createdAt: new Date(now.getTime() + 1000),
         updatedAt: new Date(now.getTime() + 1000),
@@ -96,6 +101,7 @@ describe("GetHomeworkDetail", () => {
     const generator = await homeworkRepository.createGenerator({
       title: "Frações equivalentes",
       content: "Conteúdo da geradora",
+      classId: "class-1",
       teacherId: "teacher-1",
     });
     const getHomeworkDetail = new GetHomeworkDetail(homeworkRepository);

@@ -23,6 +23,7 @@ export class InMemoryHomeworkRepository implements HomeworkRepository {
       isDraft: true,
       homeworkId: null,
       learningProfileId: null,
+      classId: data.classId,
       teacherId: data.teacherId,
       createdAt: now,
       updatedAt: now,
@@ -40,6 +41,15 @@ export class InMemoryHomeworkRepository implements HomeworkRepository {
     return this.homeworks
       .filter((homework) => homework.homeworkId === homeworkId)
       .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  }
+
+  async findGeneratorsByClassId(classId: string): Promise<Homework[]> {
+    return this.homeworks
+      .filter(
+        (homework) =>
+          homework.classId === classId && homework.homeworkId === null,
+      )
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   async updateDraft(

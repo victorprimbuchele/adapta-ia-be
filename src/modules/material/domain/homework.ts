@@ -2,7 +2,7 @@
  * Homework — material created by the teacher via the structured form
  * (Epic 4, BE-E4.1). The generator is born as a draft (`isDraft = true`)
  * with no link to another homework or learning profile (`homeworkId` and
- * `learningProfileId` null).
+ * `learningProfileId` null). Always belongs to a class (`classId`).
  */
 export interface Homework {
   id: string;
@@ -11,6 +11,7 @@ export interface Homework {
   isDraft: boolean;
   homeworkId: string | null;
   learningProfileId: string | null;
+  classId: string;
   teacherId: string;
   createdAt: Date;
   updatedAt: Date;

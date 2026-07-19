@@ -3,6 +3,7 @@ import { Router } from "express";
 import { authenticate } from "../../../../shared/auth/authenticate.js";
 import { asyncHandler } from "../../../../shared/http/async-handler.js";
 import { prisma } from "../../../../shared/infra/prisma-client.js";
+import { PrismaClassRepository } from "../../../escola/adapters/persistence/prisma-class-repository.js";
 import { CreateGeneratorHomework } from "../../application/create-generator-homework.js";
 import { GetHomeworkDetail } from "../../application/get-homework-detail.js";
 import { UpdateDraftHomework } from "../../application/update-draft-homework.js";
@@ -12,9 +13,11 @@ import { HomeworkController } from "./homework.controller.js";
 
 const homeworkRepository = new PrismaHomeworkRepository(prisma);
 const teacherRepository = new PrismaTeacherRepository(prisma);
+const classRepository = new PrismaClassRepository(prisma);
 const createGeneratorHomework = new CreateGeneratorHomework(
   homeworkRepository,
   teacherRepository,
+  classRepository,
 );
 const updateDraftHomework = new UpdateDraftHomework(homeworkRepository);
 const getHomeworkDetail = new GetHomeworkDetail(homeworkRepository);
