@@ -7,18 +7,17 @@ import {
   HomeworkNotGeneratorError,
   InvalidLearningProfilePromptError,
 } from "../domain/errors.js";
+import type { Homework } from "../domain/homework.js";
 import type { HomeworkAdaptationJob } from "../ports/adaptation-queue.js";
 import type { HomeworkRepository } from "../ports/homework-repository.js";
-import type {
-  TextSimplifierPort,
-  TextSimplifierResult,
-} from "../ports/text-simplifier.js";
+import type { TextSimplifierPort } from "../ports/text-simplifier.js";
 import { authorizeHomeworkOwner } from "./authorize-homework-owner.js";
+import { resolveAdaptationGlossary } from "./resolve-adaptation-glossary.js";
 
 /**
- * Consome um job de adaptação (Épico 5, BE-E5.2 / BE-E5.3 / ADR 006).
- * Carrega geradora + perfil, chama a LLM com o prompt do perfil e o
- * conteúdo estruturado. Persistência da variante fica para o próximo ticket.
+ * Consome um job de adaptação (Épico 5, BE-E5.2–E5.4 / ADR 006).
+ * Chama a LLM, resolve o glossário estruturado a partir do conteúdo
+ * simplificado e persiste a variante adaptada.
  */
 export class ProcessHomeworkAdaptation {
   constructor(
@@ -27,7 +26,7 @@ export class ProcessHomeworkAdaptation {
     private readonly textSimplifier: TextSimplifierPort,
   ) {}
 
-  async execute(job: HomeworkAdaptationJob): Promise<TextSimplifierResult> {
+  async execute(job: HomeworkAdaptationJob): Promise<Homework> {
     const homework = await authorizeHomeworkOwner(
       this.homeworkRepository,
       job.homeworkId,
@@ -63,12 +62,27 @@ export class ProcessHomeworkAdaptation {
       },
     });
 
-    console.log(
-      `[adaptation] llm ok homework=${job.homeworkId} ` +
-        `profile=${job.learningProfileId} code=${profilePrompt.code} ` +
-        `title="${adapted.title}"`,
+    const glossary = resolveAdaptationGlossary(
+      profilePrompt,
+      adapted.glossary,
     );
 
-    return adapted;
+    const variant = await this.homeworkRepository.upsertAdaptation({
+      title: adapted.title,
+      content: adapted.content,
+      glossary,
+      homeworkId: homework.id,
+      learningProfileId: job.learningProfileId,
+      classId: homework.classId,
+      teacherId: job.teacherId,
+    });
+
+    console.log(
+      `[adaptation] saved variant=${variant.id} homework=${job.homeworkId} ` +
+        `profile=${job.learningProfileId} code=${profilePrompt.code} ` +
+        `glossaryEntries=${glossary?.length ?? 0}`,
+    );
+
+    return variant;
   }
 }

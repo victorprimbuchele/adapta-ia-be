@@ -71,6 +71,7 @@ describe("ListClassHomeworks", () => {
       id: "adaptation-1",
       title: "Variante",
       content: "Não deve aparecer na listagem",
+      glossary: null,
       isDraft: false,
       homeworkId: newer.id,
       learningProfileId: "profile-1",

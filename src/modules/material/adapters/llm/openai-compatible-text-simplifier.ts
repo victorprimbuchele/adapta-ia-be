@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { buildAdaptationMessages } from "../../application/build-adaptation-messages.js";
 import { LlmAdaptationError } from "../../domain/errors.js";
+import { glossarySchema } from "../../domain/glossary.js";
 import type {
   TextSimplifierInput,
   TextSimplifierPort,
@@ -11,14 +12,7 @@ import type {
 const llmResultSchema = z.object({
   title: z.string().trim().min(1),
   content: z.string().trim().min(1),
-  glossary: z
-    .array(
-      z.object({
-        term: z.string().trim().min(1),
-        definition: z.string().trim().min(1),
-      }),
-    )
-    .optional(),
+  glossary: glossarySchema.optional(),
 });
 
 interface ChatCompletionsResponse {

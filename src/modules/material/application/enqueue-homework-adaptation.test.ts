@@ -170,6 +170,7 @@ describe("EnqueueHomeworkAdaptation", () => {
       id: "adaptation-1",
       title: "Variante",
       content: "Conteúdo adaptado",
+      glossary: null,
       isDraft: false,
       homeworkId: generator.id,
       learningProfileId: PROFILE_P1.id,
