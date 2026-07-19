@@ -1,3 +1,4 @@
+import { isRetriableHttpStatus } from "../../application/is-retriable-adaptation-error.js";
 import { TtsAdaptationError } from "../../domain/errors.js";
 import type {
   AudioGeneratorInput,
@@ -48,6 +49,7 @@ export class OpenAiCompatibleAudioGenerator implements AudioGeneratorPort {
     if (!text) {
       throw new TtsAdaptationError(
         "Texto da variante vazio; não é possível gerar áudio TTS.",
+        { retriable: false },
       );
     }
 
@@ -69,12 +71,15 @@ export class OpenAiCompatibleAudioGenerator implements AudioGeneratorPort {
       const body = await response.text();
       throw new TtsAdaptationError(
         `TTS retornou HTTP ${response.status}: ${body.slice(0, 300)}`,
+        { retriable: isRetriableHttpStatus(response.status) },
       );
     }
 
     const data = Buffer.from(await response.arrayBuffer());
     if (data.length === 0) {
-      throw new TtsAdaptationError("TTS retornou áudio vazio.");
+      throw new TtsAdaptationError("TTS retornou áudio vazio.", {
+        retriable: true,
+      });
     }
 
     return {

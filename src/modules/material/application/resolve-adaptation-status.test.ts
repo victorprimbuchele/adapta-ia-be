@@ -69,6 +69,17 @@ describe("resolveAdaptationStatus", () => {
     ).toBe("erro");
   });
 
+  it("em retry com backoff (waiting + attemptsMade > 0) fica processando", () => {
+    expect(
+      resolveAdaptationStatus({
+        jobState: "waiting",
+        variant: incompleteVariant,
+        profilePrompt: promptWithTts,
+        attemptsMade: 2,
+      }),
+    ).toBe("processando");
+  });
+
   it("não marca como concluido variante sem áudio enquanto processa TTS", () => {
     expect(
       resolveAdaptationStatus({

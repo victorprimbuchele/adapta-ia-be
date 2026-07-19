@@ -10,17 +10,20 @@ export interface ResolveAdaptationStatusInput {
   jobState: AdaptationQueueJobState | null;
   variant: Homework | null;
   profilePrompt: LearningProfilePrompt | null;
+  /** Tentativas já feitas; > 0 com job waiting/delayed = retry em backoff. */
+  attemptsMade?: number;
 }
 
 /**
- * Deriva o status de um par geradora+perfil (BE-E5.9).
+ * Deriva o status de um par geradora+perfil (BE-E5.9 / BE-E5.10).
  * Nunca retorna `concluido` se a variante ainda não está completa
- * (ex.: texto upsertado antes do TTS).
+ * (ex.: texto upsertado antes do TTS). Durante retry com backoff,
+ * permanece `processando` (não marca `erro` até falha persistente).
  */
 export function resolveAdaptationStatus(
   input: ResolveAdaptationStatusInput,
 ): AdaptationStatus {
-  const { jobState, variant, profilePrompt } = input;
+  const { jobState, variant, profilePrompt, attemptsMade = 0 } = input;
 
   if (jobState === "failed") {
     return "erro";
@@ -31,7 +34,8 @@ export function resolveAdaptationStatus(
   }
 
   if (jobState === "waiting") {
-    return "pendente";
+    // delayed/waiting após falha retriável = ainda tentando (BE-E5.10).
+    return attemptsMade > 0 ? "processando" : "pendente";
   }
 
   const complete =

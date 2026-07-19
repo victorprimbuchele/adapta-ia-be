@@ -32,7 +32,7 @@ LLM_API_KEY="sk-..."
 
 > Se a API/worker rodarem **no host** (fora do Docker) e só o Postgres/Redis estiverem no Compose, use `localhost` no lugar de `postgres` e `redis`.
 >
-> `LLM_API_KEY` é exigida pelo **worker** (adaptação via LLM — BE-E5.3; TTS — BE-E5.6, com fallback da mesma chave). O áudio TTS é gravado em filesystem local (`STORAGE_PATH`) com registro em `File` (BE-E5.7). A API usa Redis para não reenfileirar o mesmo par atividade+perfil (BE-E5.8). A API só enfileira jobs e não chama a LLM/TTS.
+> `LLM_API_KEY` é exigida pelo **worker** (adaptação via LLM — BE-E5.3; TTS — BE-E5.6, com fallback da mesma chave). O áudio TTS é gravado em filesystem local (`STORAGE_PATH`) com registro em `File` (BE-E5.7). A API usa Redis para não reenfileirar o mesmo par atividade+perfil (BE-E5.8). Falhas retriáveis de LLM/TTS usam retry com backoff no BullMQ (3 tentativas); falha persistente aparece como `erro` em `GET .../status-adaptacao` (BE-E5.10). A API só enfileira jobs e não chama a LLM/TTS.
 
 ## Subir com Docker (recomendado)
 

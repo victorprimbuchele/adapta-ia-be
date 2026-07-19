@@ -114,6 +114,31 @@ describe("OpenAiCompatibleTextSimplifier", () => {
         profilePrompt: PROFILE_PROMPT,
         homework: { title: "A", content: "B" },
       }),
-    ).rejects.toBeInstanceOf(LlmAdaptationError);
+    ).rejects.toMatchObject({
+      name: "LlmAdaptationError",
+      retriable: true,
+    });
+  });
+
+  it("marca HTTP 401 da LLM como não retriável", async () => {
+    globalThis.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+      text: async () => "unauthorized",
+    }) as unknown as typeof fetch;
+
+    const simplifier = new OpenAiCompatibleTextSimplifier({
+      apiKey: "test-key",
+    });
+
+    await expect(
+      simplifier.simplify({
+        profilePrompt: PROFILE_PROMPT,
+        homework: { title: "A", content: "B" },
+      }),
+    ).rejects.toMatchObject({
+      name: "LlmAdaptationError",
+      retriable: false,
+    });
   });
 });

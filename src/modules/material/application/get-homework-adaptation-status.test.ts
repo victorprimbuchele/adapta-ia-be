@@ -103,11 +103,16 @@ describe("GetHomeworkAdaptationStatus", () => {
     } = await buildScenario();
 
     adaptationJobStatus.snapshots.push(
-      { learningProfileId: PROFILE_TTS.id, state: "waiting" },
+      {
+        learningProfileId: PROFILE_TTS.id,
+        state: "waiting",
+        attemptsMade: 0,
+      },
       {
         learningProfileId: PROFILE_NO_TTS.id,
         state: "failed",
-        failedReason: "LLM down",
+        attemptsMade: 3,
+        failedReason: "Falha ao adaptar o texto com a IA. Tente novamente em instantes.",
       },
     );
 
@@ -121,13 +126,45 @@ describe("GetHomeworkAdaptationStatus", () => {
       {
         learningProfileId: PROFILE_NO_TTS.id,
         status: "erro",
-        failedReason: "LLM down",
+        failedReason:
+          "Falha ao adaptar o texto com a IA. Tente novamente em instantes.",
       },
       {
         learningProfileId: PROFILE_TTS.id,
         status: "pendente",
       },
     ]);
+  });
+
+  it("durante retry com backoff permanece processando (não marca erro)", async () => {
+    const {
+      generator,
+      adaptationJobStatus,
+      getHomeworkAdaptationStatus,
+    } = await buildScenario();
+
+    adaptationJobStatus.snapshots.push({
+      learningProfileId: PROFILE_TTS.id,
+      state: "waiting",
+      attemptsMade: 1,
+    });
+
+    const result = await getHomeworkAdaptationStatus.execute(
+      generator.id,
+      "teacher-1",
+    );
+
+    expect(result).toEqual({
+      homeworkId: generator.id,
+      status: "processando",
+      adaptations: [
+        {
+          learningProfileId: PROFILE_TTS.id,
+          status: "processando",
+        },
+      ],
+    });
+    expect(result.adaptations[0]).not.toHaveProperty("failedReason");
   });
 
   it("não retorna variante incompleta (sem áudio TTS) como concluida", async () => {
@@ -151,6 +188,7 @@ describe("GetHomeworkAdaptationStatus", () => {
     adaptationJobStatus.snapshots.push({
       learningProfileId: PROFILE_TTS.id,
       state: "active",
+      attemptsMade: 1,
     });
 
     const result = await getHomeworkAdaptationStatus.execute(
