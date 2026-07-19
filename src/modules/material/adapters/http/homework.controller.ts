@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 
 import { getAuthenticatedUser } from "../../../../shared/auth/authenticate.js";
 import type { CreateGeneratorHomework } from "../../application/create-generator-homework.js";
+import type { GetHomeworkDetail } from "../../application/get-homework-detail.js";
 import type { UpdateDraftHomework } from "../../application/update-draft-homework.js";
 import { createHomeworkSchema } from "./create-homework.dto.js";
 import { updateHomeworkSchema } from "./update-homework.dto.js";
@@ -10,6 +11,7 @@ export class HomeworkController {
   constructor(
     private readonly createGeneratorHomework: CreateGeneratorHomework,
     private readonly updateDraftHomework: UpdateDraftHomework,
+    private readonly getHomeworkDetail: GetHomeworkDetail,
   ) {}
 
   create = async (req: Request, res: Response): Promise<void> => {
@@ -26,6 +28,16 @@ export class HomeworkController {
     });
 
     res.status(201).json(homework);
+  };
+
+  show = async (req: Request, res: Response): Promise<void> => {
+    // Returns generator homework with linked adaptations (BE-E4.4).
+    const id = req.params["id"] as string;
+    const { sub: teacherId } = getAuthenticatedUser(req);
+
+    const homeworkDetail = await this.getHomeworkDetail.execute(id, teacherId);
+
+    res.status(200).json(homeworkDetail);
   };
 
   update = async (req: Request, res: Response): Promise<void> => {
