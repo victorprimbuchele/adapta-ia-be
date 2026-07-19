@@ -59,6 +59,19 @@ model Grade {
   @@map("grades")
 }
 
+/// Disciplina — dado de referência fixo para o formulário estruturado de
+/// homework (ver Épico 4, BE-E4.6). Sem cadastro dinâmico no MVP: populado
+/// via seed (`prisma/seed.ts`). `sortOrder` define a ordem de exibição.
+model Subject {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  sortOrder Int      @unique @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("subjects")
+}
+
 /// Turma — vinculada a uma escola e uma série de referência, com o
 /// professor responsável sendo sempre o usuário autenticado que a criou
 /// (ver Épico 2, BE-E2.3).
