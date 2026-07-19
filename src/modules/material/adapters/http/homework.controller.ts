@@ -2,11 +2,14 @@ import type { Request, Response } from "express";
 
 import { getAuthenticatedUser } from "../../../../shared/auth/authenticate.js";
 import type { CreateGeneratorHomework } from "../../application/create-generator-homework.js";
+import type { UpdateDraftHomework } from "../../application/update-draft-homework.js";
 import { createHomeworkSchema } from "./create-homework.dto.js";
+import { updateHomeworkSchema } from "./update-homework.dto.js";
 
 export class HomeworkController {
   constructor(
     private readonly createGeneratorHomework: CreateGeneratorHomework,
+    private readonly updateDraftHomework: UpdateDraftHomework,
   ) {}
 
   create = async (req: Request, res: Response): Promise<void> => {
@@ -23,5 +26,21 @@ export class HomeworkController {
     });
 
     res.status(201).json(homework);
+  };
+
+  update = async (req: Request, res: Response): Promise<void> => {
+    // Saves draft changes only (BE-E4.3). Does not generate adaptations.
+    const id = req.params["id"] as string;
+    const { title, content } = updateHomeworkSchema.parse(req.body);
+    const { sub: teacherId } = getAuthenticatedUser(req);
+
+    const homework = await this.updateDraftHomework.execute({
+      homeworkId: id,
+      teacherId,
+      title,
+      content,
+    });
+
+    res.status(200).json(homework);
   };
 }
