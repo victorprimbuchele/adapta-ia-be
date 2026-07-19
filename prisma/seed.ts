@@ -6,8 +6,9 @@ import { PrismaClient, type Prisma } from "../src/generated/prisma/client.js";
 
 /**
  * Dados de referência fixos do MVP (Épico 2 — Gestão de Escolas, Séries e
- * Turmas; Épico 3 — Perfis de Aprendizagem). Sem cadastro dinâmico: escolas,
- * séries e perfis só existem via seed.
+ * Turmas; Épico 3 — Perfis de Aprendizagem; Épico 4 — Disciplinas do
+ * formulário de homework). Sem cadastro dinâmico: escolas, séries, perfis
+ * e disciplinas só existem via seed.
  *
  * Idempotente (`upsert`): pode ser re-executado com segurança em qualquer
  * ambiente (dev, CI, produção) sem duplicar registros.
@@ -34,6 +35,29 @@ const GRADES: ReadonlyArray<{ name: string; sortOrder: number }> = [
   { name: "1º Ano - Ensino Médio", sortOrder: 10 },
   { name: "2º Ano - Ensino Médio", sortOrder: 11 },
   { name: "3º Ano - Ensino Médio", sortOrder: 12 },
+];
+
+/**
+ * Catálogo de `Subject` (Épico 4, BE-E4.6): componentes curriculares usados
+ * no formulário estruturado de homework. Inclui os do Ensino Fundamental
+ * (BNCC) e os mais comuns do Ensino Médio.
+ */
+const SUBJECTS: ReadonlyArray<{ name: string; sortOrder: number }> = [
+  { name: "Língua Portuguesa", sortOrder: 1 },
+  { name: "Matemática", sortOrder: 2 },
+  { name: "Ciências", sortOrder: 3 },
+  { name: "História", sortOrder: 4 },
+  { name: "Geografia", sortOrder: 5 },
+  { name: "Arte", sortOrder: 6 },
+  { name: "Educação Física", sortOrder: 7 },
+  { name: "Língua Inglesa", sortOrder: 8 },
+  { name: "Ensino Religioso", sortOrder: 9 },
+  { name: "Biologia", sortOrder: 10 },
+  { name: "Física", sortOrder: 11 },
+  { name: "Química", sortOrder: 12 },
+  { name: "Filosofia", sortOrder: 13 },
+  { name: "Sociologia", sortOrder: 14 },
+  { name: "Língua Espanhola", sortOrder: 15 },
 ];
 
 type AdaptationFlags = {
@@ -248,6 +272,16 @@ async function seedGrades(): Promise<void> {
   }
 }
 
+async function seedSubjects(): Promise<void> {
+  for (const subject of SUBJECTS) {
+    await prisma.subject.upsert({
+      where: { name: subject.name },
+      update: { sortOrder: subject.sortOrder },
+      create: subject,
+    });
+  }
+}
+
 async function seedLearningProfiles(): Promise<void> {
   for (const profile of LEARNING_PROFILES) {
     const prompt = profile.prompt as Prisma.InputJsonValue;
@@ -262,15 +296,19 @@ async function seedLearningProfiles(): Promise<void> {
 async function main(): Promise<void> {
   await seedGrades();
   await seedSchools();
+  await seedSubjects();
   await seedLearningProfiles();
 
-  const [schoolCount, gradeCount, learningProfileCount] = await Promise.all([
-    prisma.school.count(),
-    prisma.grade.count(),
-    prisma.learningProfile.count(),
-  ]);
+  const [schoolCount, gradeCount, subjectCount, learningProfileCount] =
+    await Promise.all([
+      prisma.school.count(),
+      prisma.grade.count(),
+      prisma.subject.count(),
+      prisma.learningProfile.count(),
+    ]);
   console.log(
     `Seed concluído: ${schoolCount} escola(s), ${gradeCount} série(s), ` +
+      `${subjectCount} disciplina(s), ` +
       `${learningProfileCount} perfil(is) de aprendizagem.`,
   );
 }
