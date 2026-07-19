@@ -86,7 +86,7 @@ async function buildScenario(overrides?: { profile?: LearningProfile }) {
 }
 
 describe("ProcessHomeworkAdaptation", () => {
-  it("persiste variante adaptada com glossário JSON estruturado", async () => {
+  it("persiste variante vinculada à geradora e ao perfil com glossário (BE-E5.5)", async () => {
     const {
       generator,
       homeworkRepository,
@@ -112,6 +112,8 @@ describe("ProcessHomeworkAdaptation", () => {
       teacherId: "teacher-1",
       isDraft: false,
     });
+    expect(variant.homeworkId).not.toBeNull();
+    expect(variant.learningProfileId).not.toBeNull();
     expect(homeworkRepository.homeworks).toHaveLength(2);
     expect(
       homeworkRepository.homeworks.find((item) => item.id === variant.id)
@@ -119,6 +121,89 @@ describe("ProcessHomeworkAdaptation", () => {
     ).toEqual([
       { term: "conceito", definition: "ideia principal do conteúdo" },
     ]);
+    await expect(
+      homeworkRepository.findAdaptationsByHomeworkId(generator.id),
+    ).resolves.toEqual([expect.objectContaining({ id: variant.id })]);
+
+    logSpy.mockRestore();
+  });
+
+  it("atualiza a mesma variante no reprocessamento do par geradora+perfil", async () => {
+    const {
+      generator,
+      homeworkRepository,
+      textSimplifier,
+      processHomeworkAdaptation,
+    } = await buildScenario();
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+
+    const first = await processHomeworkAdaptation.execute({
+      homeworkId: generator.id,
+      learningProfileId: PROFILE_P1.id,
+      teacherId: "teacher-1",
+    });
+
+    textSimplifier.result = {
+      title: "Título reprocessado",
+      content: "Conteúdo reprocessado",
+      glossary: [{ term: "novo", definition: "termo atualizado" }],
+    };
+
+    const second = await processHomeworkAdaptation.execute({
+      homeworkId: generator.id,
+      learningProfileId: PROFILE_P1.id,
+      teacherId: "teacher-1",
+    });
+
+    expect(second.id).toBe(first.id);
+    expect(second).toMatchObject({
+      title: "Título reprocessado",
+      content: "Conteúdo reprocessado",
+      glossary: [{ term: "novo", definition: "termo atualizado" }],
+      homeworkId: generator.id,
+      learningProfileId: PROFILE_P1.id,
+    });
+    expect(homeworkRepository.homeworks).toHaveLength(2);
+    await expect(
+      homeworkRepository.findAdaptationsByHomeworkId(generator.id),
+    ).resolves.toHaveLength(1);
+
+    logSpy.mockRestore();
+  });
+
+  it("persiste uma variante por perfil vinculada à mesma geradora", async () => {
+    const {
+      generator,
+      homeworkRepository,
+      processHomeworkAdaptation,
+    } = await buildScenario();
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+
+    const variantP1 = await processHomeworkAdaptation.execute({
+      homeworkId: generator.id,
+      learningProfileId: PROFILE_P1.id,
+      teacherId: "teacher-1",
+    });
+    const variantP2 = await processHomeworkAdaptation.execute({
+      homeworkId: generator.id,
+      learningProfileId: PROFILE_P2.id,
+      teacherId: "teacher-1",
+    });
+
+    expect(variantP1.id).not.toBe(variantP2.id);
+    expect(variantP1.homeworkId).toBe(generator.id);
+    expect(variantP2.homeworkId).toBe(generator.id);
+    expect(variantP1.learningProfileId).toBe(PROFILE_P1.id);
+    expect(variantP2.learningProfileId).toBe(PROFILE_P2.id);
+    expect(homeworkRepository.homeworks).toHaveLength(3);
+    await expect(
+      homeworkRepository.findAdaptationsByHomeworkId(generator.id),
+    ).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: variantP1.id }),
+        expect.objectContaining({ id: variantP2.id }),
+      ]),
+    );
 
     logSpy.mockRestore();
   });
