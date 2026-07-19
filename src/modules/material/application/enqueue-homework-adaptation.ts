@@ -25,7 +25,7 @@ export interface EnqueueHomeworkAdaptationResult {
 /**
  * Enfileira a adaptação de uma homework geradora para cada perfil alvo
  * (perfis da turma ou seleção explícita) e retorna sem aguardar o worker
- * (ver Épico 5, BE-E5.1 / ADR 006).
+ * nem a LLM (ver Épico 5, BE-E5.1 / BE-E5.2 / ADR 006).
  */
 export class EnqueueHomeworkAdaptation {
   constructor(
