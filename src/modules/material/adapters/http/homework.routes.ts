@@ -10,10 +10,12 @@ import { PrismaUserClassRepository } from "../../../escola/adapters/persistence/
 import { PrismaUserLearningProfileRepository } from "../../../escola/adapters/persistence/prisma-user-learning-profile-repository.js";
 import { CreateGeneratorHomework } from "../../application/create-generator-homework.js";
 import { EnqueueHomeworkAdaptation } from "../../application/enqueue-homework-adaptation.js";
+import { GetHomeworkAdaptationStatus } from "../../application/get-homework-adaptation-status.js";
 import { GetHomeworkDetail } from "../../application/get-homework-detail.js";
 import { UpdateDraftHomework } from "../../application/update-draft-homework.js";
 import { PrismaHomeworkRepository } from "../persistence/prisma-homework-repository.js";
 import { PrismaTeacherRepository } from "../persistence/prisma-teacher-repository.js";
+import { BullMqAdaptationJobStatus } from "../queue/bullmq-adaptation-job-status.js";
 import { BullMqAdaptationQueue } from "../queue/bullmq-adaptation-queue.js";
 import { HomeworkController } from "./homework.controller.js";
 
@@ -26,6 +28,7 @@ const userLearningProfileRepository = new PrismaUserLearningProfileRepository(
 );
 const learningProfileRepository = new PrismaLearningProfileRepository(prisma);
 const adaptationQueue = new BullMqAdaptationQueue();
+const adaptationJobStatus = new BullMqAdaptationJobStatus();
 const idempotency = new RedisIdempotency();
 
 const createGeneratorHomework = new CreateGeneratorHomework(
@@ -43,11 +46,17 @@ const enqueueHomeworkAdaptation = new EnqueueHomeworkAdaptation(
   adaptationQueue,
   idempotency,
 );
+const getHomeworkAdaptationStatus = new GetHomeworkAdaptationStatus(
+  homeworkRepository,
+  learningProfileRepository,
+  adaptationJobStatus,
+);
 const homeworkController = new HomeworkController(
   createGeneratorHomework,
   updateDraftHomework,
   getHomeworkDetail,
   enqueueHomeworkAdaptation,
+  getHomeworkAdaptationStatus,
 );
 
 export const homeworkRouter = Router();
@@ -56,6 +65,12 @@ homeworkRouter.post(
   "/",
   authenticate,
   asyncHandler(homeworkController.create),
+);
+
+homeworkRouter.get(
+  "/:id/status-adaptacao",
+  authenticate,
+  asyncHandler(homeworkController.adaptationStatus),
 );
 
 homeworkRouter.get(

@@ -3,6 +3,7 @@ import type { Request, Response } from "express";
 import { getAuthenticatedUser } from "../../../../shared/auth/authenticate.js";
 import type { CreateGeneratorHomework } from "../../application/create-generator-homework.js";
 import type { EnqueueHomeworkAdaptation } from "../../application/enqueue-homework-adaptation.js";
+import type { GetHomeworkAdaptationStatus } from "../../application/get-homework-adaptation-status.js";
 import type { GetHomeworkDetail } from "../../application/get-homework-detail.js";
 import type { UpdateDraftHomework } from "../../application/update-draft-homework.js";
 import { adaptHomeworkSchema } from "./adapt-homework.dto.js";
@@ -15,6 +16,7 @@ export class HomeworkController {
     private readonly updateDraftHomework: UpdateDraftHomework,
     private readonly getHomeworkDetail: GetHomeworkDetail,
     private readonly enqueueHomeworkAdaptation: EnqueueHomeworkAdaptation,
+    private readonly getHomeworkAdaptationStatus: GetHomeworkAdaptationStatus,
   ) {}
 
   create = async (req: Request, res: Response): Promise<void> => {
@@ -73,5 +75,18 @@ export class HomeworkController {
     });
 
     res.status(202).json(result);
+  };
+
+  adaptationStatus = async (req: Request, res: Response): Promise<void> => {
+    // Polling de status da adaptação (BE-E5.9).
+    const id = req.params["id"] as string;
+    const { sub: teacherId } = getAuthenticatedUser(req);
+
+    const result = await this.getHomeworkAdaptationStatus.execute(
+      id,
+      teacherId,
+    );
+
+    res.status(200).json(result);
   };
 }
