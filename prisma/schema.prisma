@@ -24,6 +24,7 @@ model User {
   classes               Class[]
   userClasses           UserClass[]
   userLearningProfiles  UserLearningProfile[]
+  homeworks             Homework[]
 
   @@map("users")
 }
@@ -117,6 +118,7 @@ model LearningProfile {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   userLearningProfiles UserLearningProfile[]
+  homeworks            Homework[]
 
   @@map("learning_profiles")
 }
@@ -139,4 +141,31 @@ model UserLearningProfile {
   @@unique([userId])
   @@index([learningProfileId])
   @@map("user_learning_profiles")
+}
+
+/// Atividade (Homework) — material criado pelo professor via formulário
+/// estruturado (ver Épico 4, BE-E4.1 / ADR 012). A "homework geradora" é o
+/// original (`homeworkId` e `learningProfileId` nulos, `isDraft` true na
+/// criação). Adaptações futuras apontam para a geradora via `homeworkId` e
+/// carregam o `learningProfileId` do perfil alvo.
+model Homework {
+  id                String   @id @default(cuid())
+  title             String
+  content           String
+  isDraft           Boolean  @default(true) @map("is_draft")
+  homeworkId        String?  @map("homework_id")
+  learningProfileId String?  @map("learning_profile_id")
+  teacherId         String   @map("teacher_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  parentHomework  Homework?        @relation("HomeworkAdaptations", fields: [homeworkId], references: [id])
+  adaptations     Homework[]       @relation("HomeworkAdaptations")
+  learningProfile LearningProfile? @relation(fields: [learningProfileId], references: [id])
+  teacher         User             @relation(fields: [teacherId], references: [id])
+
+  @@index([teacherId])
+  @@index([homeworkId])
+  @@index([learningProfileId])
+  @@map("homeworks")
 }
