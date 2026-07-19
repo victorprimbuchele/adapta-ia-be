@@ -8,7 +8,8 @@ import type { GlossaryEntry } from "./glossary.js";
  * Adapted variants link to the generator (`homeworkId`) and learning
  * profile (`learningProfileId`), may carry a structured `glossary`
  * (Épico 5, BE-E5.5 / BE-E5.4), and may point to TTS audio via
- * `audioFileId` (BE-E5.7).
+ * `audioFileId` (BE-E5.7). Glossário e áudio nunca existem na geradora
+ * — só em variantes (BE-E5.11).
  */
 export interface Homework {
   id: string;
