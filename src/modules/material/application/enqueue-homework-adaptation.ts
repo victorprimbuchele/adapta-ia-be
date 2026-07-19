@@ -1,3 +1,4 @@
+import type { IdempotencyPort } from "../../../shared/ports/idempotency.js";
 import { LearningProfileNotFoundError } from "../../escola/domain/errors.js";
 import type { LearningProfileRepository } from "../../escola/ports/learning-profile-repository.js";
 import type { UserClassRepository } from "../../escola/ports/user-class-repository.js";
@@ -8,6 +9,10 @@ import {
 } from "../domain/errors.js";
 import type { AdaptationQueue } from "../ports/adaptation-queue.js";
 import type { HomeworkRepository } from "../ports/homework-repository.js";
+import {
+  adaptationIdempotencyKey,
+  adaptationIdempotencyTtlSeconds,
+} from "./adaptation-idempotency-key.js";
 import { authorizeHomeworkOwner } from "./authorize-homework-owner.js";
 
 export interface EnqueueHomeworkAdaptationInput {
@@ -20,12 +25,14 @@ export interface EnqueueHomeworkAdaptationInput {
 export interface EnqueueHomeworkAdaptationResult {
   homeworkId: string;
   enqueuedLearningProfileIds: string[];
+  /** Perfis ignorados por idempotência Redis (já enfileirados/processados). */
+  skippedLearningProfileIds: string[];
 }
 
 /**
  * Enfileira a adaptação de uma homework geradora para cada perfil alvo
- * (perfis da turma ou seleção explícita) e retorna sem aguardar o worker
- * nem a LLM (ver Épico 5, BE-E5.1 / BE-E5.2 / ADR 006).
+ * (Épico 5, BE-E5.1 / BE-E5.2 / BE-E5.8 / ADR 005–006).
+ * Usa Redis para não enfileirar de novo o mesmo par atividade+perfil.
  */
 export class EnqueueHomeworkAdaptation {
   constructor(
@@ -34,6 +41,8 @@ export class EnqueueHomeworkAdaptation {
     private readonly userLearningProfileRepository: UserLearningProfileRepository,
     private readonly learningProfileRepository: LearningProfileRepository,
     private readonly adaptationQueue: AdaptationQueue,
+    private readonly idempotency: IdempotencyPort,
+    private readonly idempotencyTtlSeconds: number = adaptationIdempotencyTtlSeconds(),
   ) {}
 
   async execute(
@@ -58,8 +67,24 @@ export class EnqueueHomeworkAdaptation {
       throw new NoLearningProfilesToAdaptError(input.homeworkId);
     }
 
+    const enqueuedLearningProfileIds: string[] = [];
+    const skippedLearningProfileIds: string[] = [];
+
+    for (const learningProfileId of learningProfileIds) {
+      const acquired = await this.idempotency.acquire(
+        adaptationIdempotencyKey(homework.id, learningProfileId),
+        this.idempotencyTtlSeconds,
+      );
+
+      if (acquired) {
+        enqueuedLearningProfileIds.push(learningProfileId);
+      } else {
+        skippedLearningProfileIds.push(learningProfileId);
+      }
+    }
+
     await this.adaptationQueue.enqueue(
-      learningProfileIds.map((learningProfileId) => ({
+      enqueuedLearningProfileIds.map((learningProfileId) => ({
         homeworkId: homework.id,
         learningProfileId,
         teacherId: input.teacherId,
@@ -68,7 +93,8 @@ export class EnqueueHomeworkAdaptation {
 
     return {
       homeworkId: homework.id,
-      enqueuedLearningProfileIds: learningProfileIds,
+      enqueuedLearningProfileIds,
+      skippedLearningProfileIds,
     };
   }
 
