@@ -16,14 +16,19 @@ Crie um arquivo `.env` na raiz do projeto:
 DATABASE_URL="postgresql://adapta:adapta@postgres:5432/adapta_db"
 REDIS_URL="redis://redis:6379"
 LLM_API_KEY="sk-..."
-# Opcionais (defaults: OpenAI + gpt-4o-mini)
+# Opcionais LLM (defaults: OpenAI + gpt-4o-mini)
 # LLM_BASE_URL="https://api.openai.com/v1"
 # LLM_MODEL="gpt-4o-mini"
+# Opcionais TTS (BE-E5.6; default: mesma chave/base da LLM + tts-1 / voz nova)
+# TTS_API_KEY="sk-..."
+# TTS_BASE_URL="https://api.openai.com/v1"
+# TTS_MODEL="tts-1"
+# TTS_VOICE="nova"
 ```
 
 > Se a API/worker rodarem **no host** (fora do Docker) e só o Postgres/Redis estiverem no Compose, use `localhost` no lugar de `postgres` e `redis`.
 >
-> `LLM_API_KEY` é exigida pelo **worker** (adaptação via LLM — BE-E5.3). A API só enfileira jobs e não chama a LLM.
+> `LLM_API_KEY` é exigida pelo **worker** (adaptação via LLM — BE-E5.3; TTS — BE-E5.6, com fallback da mesma chave). A API só enfileira jobs e não chama a LLM/TTS.
 
 ## Subir com Docker (recomendado)
 
