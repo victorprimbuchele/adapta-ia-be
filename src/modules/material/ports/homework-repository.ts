@@ -13,6 +13,7 @@ export interface UpdateDraftHomeworkData {
   content: string;
 }
 
+/** Dados da variante adaptada (BE-E5.5): sempre vinculada à geradora e ao perfil. */
 export interface UpsertAdaptationHomeworkData {
   title: string;
   content: string;
@@ -51,8 +52,9 @@ export interface HomeworkRepository {
   updateDraft(id: string, data: UpdateDraftHomeworkData): Promise<Homework>;
 
   /**
-   * Cria ou atualiza a variante adaptada para o par geradora+perfil,
-   * persistindo o glossário estruturado quando o perfil pede (BE-E5.4).
+   * Cria ou atualiza a Homework variante para o par geradora+perfil
+   * (`homeworkId` = geradora, `learningProfileId` preenchido, `glossary`
+   * estruturado quando o perfil pede) — Épico 5, BE-E5.5 / BE-E5.4.
    */
   upsertAdaptation(data: UpsertAdaptationHomeworkData): Promise<Homework>;
 }

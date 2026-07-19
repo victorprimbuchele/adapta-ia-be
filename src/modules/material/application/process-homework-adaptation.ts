@@ -15,9 +15,9 @@ import { authorizeHomeworkOwner } from "./authorize-homework-owner.js";
 import { resolveAdaptationGlossary } from "./resolve-adaptation-glossary.js";
 
 /**
- * Consome um job de adaptação (Épico 5, BE-E5.2–E5.4 / ADR 006).
- * Chama a LLM, resolve o glossário estruturado a partir do conteúdo
- * simplificado e persiste a variante adaptada.
+ * Consome um job de adaptação (Épico 5, BE-E5.2–E5.5 / ADR 006).
+ * Chama a LLM, resolve o glossário estruturado e persiste a Homework
+ * variante vinculada à geradora e ao perfil (`upsertAdaptation`).
  */
 export class ProcessHomeworkAdaptation {
   constructor(

@@ -25,7 +25,7 @@ type HomeworkRow = {
 
 /**
  * Implementação de `HomeworkRepository` sobre a tabela `homeworks`
- * (ver Épico 4 e Épico 5, BE-E5.4).
+ * (Épico 4; variantes adaptadas — Épico 5, BE-E5.5 / BE-E5.4).
  */
 export class PrismaHomeworkRepository implements HomeworkRepository {
   constructor(private readonly prisma: PrismaClient) {}
