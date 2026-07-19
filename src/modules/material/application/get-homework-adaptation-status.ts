@@ -96,6 +96,7 @@ export class GetHomeworkAdaptationStatus {
         jobState: job?.state ?? null,
         variant,
         profilePrompt,
+        attemptsMade: job?.attemptsMade ?? 0,
       });
 
       const item: ProfileAdaptationStatusItem = {
@@ -107,6 +108,7 @@ export class GetHomeworkAdaptationStatus {
         item.variantId = variant.id;
       }
 
+      // Mensagem visível ao professor só na falha persistente (BE-E5.10).
       if (status === "erro" && job?.failedReason) {
         item.failedReason = job.failedReason;
       }

@@ -19,7 +19,7 @@ const JOB_STATES = [
 ] as const;
 
 /**
- * Consulta o estado dos jobs BullMQ de adaptação (Épico 5, BE-E5.9).
+ * Consulta o estado dos jobs BullMQ de adaptação (Épico 5, BE-E5.9 / BE-E5.10).
  */
 export class BullMqAdaptationJobStatus implements AdaptationJobStatusPort {
   private readonly queue = new Queue<HomeworkAdaptationJob>(
@@ -42,6 +42,7 @@ export class BullMqAdaptationJobStatus implements AdaptationJobStatusPort {
       const snapshot: AdaptationJobSnapshot = {
         learningProfileId: job.data.learningProfileId,
         state: mapQueueState(rawState),
+        attemptsMade: job.attemptsMade,
       };
 
       if (job.failedReason) {

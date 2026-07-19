@@ -1,33 +1,24 @@
 import { Queue } from "bullmq";
 
 import { getRedisConnectionOptions } from "../../../../shared/infra/redis.js";
+import { ADAPTATION_JOB_OPTIONS } from "../../application/adaptation-job-options.js";
 import type {
   AdaptationQueue,
   HomeworkAdaptationJob,
 } from "../../ports/adaptation-queue.js";
 import { HOMEWORK_ADAPTATION_QUEUE } from "../../ports/adaptation-queue.js";
 
-/** Opções padrão de job: retries com backoff (ADR 006) e retenção limitada. */
-const DEFAULT_JOB_OPTIONS = {
-  attempts: 3,
-  backoff: {
-    type: "exponential" as const,
-    delay: 2_000,
-  },
-  removeOnComplete: 100,
-  removeOnFail: 100,
-};
-
 /**
- * Adapter BullMQ de `AdaptationQueue` (Épico 5, BE-E5.2 / ADR 006).
- * Só adiciona jobs à fila — a resposta HTTP não espera o worker/LLM.
+ * Adapter BullMQ de `AdaptationQueue` (Épico 5, BE-E5.2 / BE-E5.10 / ADR 006).
+ * Retry com backoff exponencial (3 tentativas); a resposta HTTP não espera
+ * o worker/LLM.
  */
 export class BullMqAdaptationQueue implements AdaptationQueue {
   private readonly queue = new Queue<HomeworkAdaptationJob>(
     HOMEWORK_ADAPTATION_QUEUE,
     {
       connection: getRedisConnectionOptions(),
-      defaultJobOptions: DEFAULT_JOB_OPTIONS,
+      defaultJobOptions: ADAPTATION_JOB_OPTIONS,
     },
   );
 
@@ -45,7 +36,7 @@ export class BullMqAdaptationQueue implements AdaptationQueue {
     try {
       await this.queue.add("adapt", data, {
         jobId: adaptationJobId(data),
-        ...DEFAULT_JOB_OPTIONS,
+        ...ADAPTATION_JOB_OPTIONS,
       });
     } catch (error) {
       if (!isDuplicateJobError(error)) {

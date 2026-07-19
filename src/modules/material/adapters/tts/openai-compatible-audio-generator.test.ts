@@ -92,18 +92,37 @@ describe("OpenAiCompatibleAudioGenerator", () => {
       apiKey: "test-key",
     });
 
-    await expect(
-      generator.generate({ text: "Olá" }),
-    ).rejects.toBeInstanceOf(TtsAdaptationError);
+    await expect(generator.generate({ text: "Olá" })).rejects.toMatchObject({
+      name: "TtsAdaptationError",
+      retriable: true,
+    });
   });
 
-  it("falha quando o texto da variante está vazio", async () => {
+  it("marca HTTP 400 do TTS como não retriável", async () => {
+    globalThis.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      text: async () => "bad request",
+    }) as unknown as typeof fetch;
+
     const generator = new OpenAiCompatibleAudioGenerator({
       apiKey: "test-key",
     });
 
-    await expect(generator.generate({ text: "   " })).rejects.toBeInstanceOf(
-      TtsAdaptationError,
-    );
+    await expect(generator.generate({ text: "Olá" })).rejects.toMatchObject({
+      name: "TtsAdaptationError",
+      retriable: false,
+    });
+  });
+
+  it("falha quando o texto da variante está vazio (não retriável)", async () => {
+    const generator = new OpenAiCompatibleAudioGenerator({
+      apiKey: "test-key",
+    });
+
+    await expect(generator.generate({ text: "   " })).rejects.toMatchObject({
+      name: "TtsAdaptationError",
+      retriable: false,
+    });
   });
 });

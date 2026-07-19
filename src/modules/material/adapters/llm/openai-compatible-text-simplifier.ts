@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { buildAdaptationMessages } from "../../application/build-adaptation-messages.js";
+import { isRetriableHttpStatus } from "../../application/is-retriable-adaptation-error.js";
 import { LlmAdaptationError } from "../../domain/errors.js";
 import { glossarySchema } from "../../domain/glossary.js";
 import type {
@@ -74,6 +75,7 @@ export class OpenAiCompatibleTextSimplifier implements TextSimplifierPort {
       const body = await response.text();
       throw new LlmAdaptationError(
         `LLM retornou HTTP ${response.status}: ${body.slice(0, 300)}`,
+        { retriable: isRetriableHttpStatus(response.status) },
       );
     }
 

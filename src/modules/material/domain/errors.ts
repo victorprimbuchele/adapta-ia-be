@@ -87,19 +87,28 @@ export class InvalidLearningProfilePromptError extends AppError {
 }
 
 /**
- * Falha na chamada ou no parse da resposta da LLM (Epic 5, BE-E5.3).
+ * Falha na chamada ou no parse da resposta da LLM (Epic 5, BE-E5.3 / BE-E5.10).
+ * Por padrão é retriável (5xx/429/resposta transitória); erros 4xx de cliente
+ * devem passar `retriable: false`.
  */
 export class LlmAdaptationError extends AppError {
-  constructor(message: string) {
+  readonly retriable: boolean;
+
+  constructor(message: string, options?: { retriable?: boolean }) {
     super(message, 502, "LLM_ADAPTATION_FAILED");
+    this.retriable = options?.retriable ?? true;
   }
 }
 
 /**
- * Falha na chamada à API de TTS (Epic 5, BE-E5.6).
+ * Falha na chamada à API de TTS (Epic 5, BE-E5.6 / BE-E5.10).
+ * Por padrão é retriável; falhas de validação local usam `retriable: false`.
  */
 export class TtsAdaptationError extends AppError {
-  constructor(message: string) {
+  readonly retriable: boolean;
+
+  constructor(message: string, options?: { retriable?: boolean }) {
     super(message, 502, "TTS_ADAPTATION_FAILED");
+    this.retriable = options?.retriable ?? true;
   }
 }
