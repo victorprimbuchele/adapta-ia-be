@@ -2,6 +2,7 @@ import type { Homework } from "../../domain/homework.js";
 import type {
   CreateGeneratorHomeworkData,
   HomeworkRepository,
+  UpdateDraftHomeworkData,
 } from "../../ports/homework-repository.js";
 
 let nextId = 1;
@@ -28,6 +29,27 @@ export class InMemoryHomeworkRepository implements HomeworkRepository {
     };
 
     this.homeworks.push(homework);
+    return homework;
+  }
+
+  async findById(id: string): Promise<Homework | null> {
+    return this.homeworks.find((homework) => homework.id === id) ?? null;
+  }
+
+  async updateDraft(
+    id: string,
+    data: UpdateDraftHomeworkData,
+  ): Promise<Homework> {
+    const homework = this.homeworks.find((item) => item.id === id);
+
+    if (!homework) {
+      throw new Error(`Homework "${id}" not found in memory repository.`);
+    }
+
+    homework.title = data.title;
+    homework.content = data.content;
+    homework.updatedAt = new Date();
+
     return homework;
   }
 }
