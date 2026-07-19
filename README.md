@@ -15,9 +15,15 @@ Crie um arquivo `.env` na raiz do projeto:
 ```env
 DATABASE_URL="postgresql://adapta:adapta@postgres:5432/adapta_db"
 REDIS_URL="redis://redis:6379"
+LLM_API_KEY="sk-..."
+# Opcionais (defaults: OpenAI + gpt-4o-mini)
+# LLM_BASE_URL="https://api.openai.com/v1"
+# LLM_MODEL="gpt-4o-mini"
 ```
 
 > Se a API/worker rodarem **no host** (fora do Docker) e só o Postgres/Redis estiverem no Compose, use `localhost` no lugar de `postgres` e `redis`.
+>
+> `LLM_API_KEY` é exigida pelo **worker** (adaptação via LLM — BE-E5.3). A API só enfileira jobs e não chama a LLM.
 
 ## Subir com Docker (recomendado)
 
@@ -66,6 +72,7 @@ docker compose up -d postgres redis
 ```env
 DATABASE_URL="postgresql://adapta:adapta@localhost:5432/adapta_db"
 REDIS_URL="redis://localhost:6379"
+LLM_API_KEY="sk-..."
 ```
 
 3. Instale as dependências e gere o client do Prisma:
@@ -120,4 +127,5 @@ Decisões de arquitetura estão em [`adr.md`](./adr.md). Em resumo:
 - Monólito modular com arquitetura hexagonal
 - PostgreSQL + Prisma
 - Redis (idempotência) + BullMQ (filas)
+- LLM OpenAI-compatible no worker (`TextSimplifierPort` — ADR 003)
 - API versionada em `/api/v1/...`
