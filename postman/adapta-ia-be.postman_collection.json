@@ -1,0 +1,441 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "Adapta IA - Backend API",
+    "description": "Collection da API REST do adapta-ia-be (`/api/v1`).\n\n## Como usar\n\n1. Importe este arquivo no Postman.\n2. Confirme a variável `baseUrl` (padrão: `http://localhost:3000/api/v1`).\n3. Execute **Usuários → Registrar usuário** (ou use um usuário existente).\n4. Execute **Auth → Login** — o token JWT é salvo automaticamente em `accessToken`.\n5. Execute **Escolas → Listar escolas** e **Séries → Listar séries** para preencher `schoolId` e `gradeId`.\n6. Siga o fluxo: criar turma → matricular aluno → atribuir perfil → criar homework → adaptar.\n\n## Autenticação\n\nRotas protegidas exigem header `Authorization: Bearer {{accessToken}}`.\n\n## Ordem sugerida de teste\n\nHealth → Registrar → Login → Me → Escolas → Séries → Criar turma → Listar turmas → Matricular aluno → Atribuir perfil → Criar homework → Adaptar → Status adaptação",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000/api/v1" },
+    { "key": "accessToken", "value": "" },
+    { "key": "schoolId", "value": "" },
+    { "key": "gradeId", "value": "" },
+    { "key": "classId", "value": "" },
+    { "key": "studentId", "value": "" },
+    { "key": "homeworkId", "value": "" },
+    { "key": "learningProfileId", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health",
+            "description": "Verifica se a API está no ar. Resposta esperada: `OK`"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Usuários",
+      "item": [
+        {
+          "name": "Registrar usuário",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const user = pm.response.json();",
+                  "    pm.collectionVariables.set('userEmail', user.email);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Prof. Ana Silva\",\n  \"email\": \"ana.silva@escola.com\",\n  \"password\": \"Senha1234\"\n}"
+            },
+            "url": "{{baseUrl}}/usuarios",
+            "description": "Cadastra um novo professor/usuário.\n\n**Regras de senha:** mínimo 8 caracteres, ao menos 1 maiúscula, 1 minúscula e 1 número."
+          },
+          "response": []
+        },
+        {
+          "name": "Usuário autenticado (me)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/usuarios/me",
+            "description": "Retorna os dados do usuário autenticado."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const json = pm.response.json();",
+                  "    pm.collectionVariables.set('accessToken', json.accessToken);",
+                  "    console.log('Token salvo em accessToken');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ana.silva@escola.com\",\n  \"password\": \"Senha1234\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Autentica o usuário e retorna `accessToken` + dados do usuário.\n\nO script de teste salva automaticamente o token na variável `accessToken`."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Escolas",
+      "item": [
+        {
+          "name": "Listar escolas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const schools = pm.response.json();",
+                  "    if (Array.isArray(schools) && schools.length > 0) {",
+                  "        pm.collectionVariables.set('schoolId', schools[0].id);",
+                  "        console.log('schoolId salvo:', schools[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/escolas",
+            "description": "Lista escolas de referência (populadas via seed). O script salva o primeiro `id` em `schoolId`."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Séries",
+      "item": [
+        {
+          "name": "Listar séries",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const grades = pm.response.json();",
+                  "    if (Array.isArray(grades) && grades.length > 0) {",
+                  "        pm.collectionVariables.set('gradeId', grades[0].id);",
+                  "        console.log('gradeId salvo:', grades[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/series",
+            "description": "Lista séries/anos de referência (populadas via seed). O script salva o primeiro `id` em `gradeId`."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Turmas",
+      "item": [
+        {
+          "name": "Criar turma",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const turma = pm.response.json();",
+                  "    pm.collectionVariables.set('classId', turma.id);",
+                  "    console.log('classId salvo:', turma.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"5º A - Manhã\",\n  \"schoolId\": \"{{schoolId}}\",\n  \"gradeId\": \"{{gradeId}}\"\n}"
+            },
+            "url": "{{baseUrl}}/turmas",
+            "description": "Cria uma turma vinculada à escola e série do professor autenticado.\n\nExecute **Listar escolas** e **Listar séries** antes, ou preencha os IDs manualmente."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar turmas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/turmas",
+            "description": "Lista todas as turmas do professor autenticado."
+          },
+          "response": []
+        },
+        {
+          "name": "Detalhe da turma",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/turmas/{{classId}}",
+            "description": "Retorna detalhes de uma turma específica."
+          },
+          "response": []
+        },
+        {
+          "name": "Excluir turma",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/turmas/{{classId}}",
+            "description": "Remove uma turma. Resposta esperada: `204 No Content`."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar alunos da turma",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const students = pm.response.json();",
+                  "    if (Array.isArray(students) && students.length > 0) {",
+                  "        pm.collectionVariables.set('studentId', students[0].id);",
+                  "        if (students[0].learningProfileId) {",
+                  "            pm.collectionVariables.set('learningProfileId', students[0].learningProfileId);",
+                  "        }",
+                  "        console.log('studentId salvo:', students[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/turmas/{{classId}}/alunos",
+            "description": "Lista alunos matriculados na turma, com perfis de aprendizagem quando atribuídos."
+          },
+          "response": []
+        },
+        {
+          "name": "Matricular aluno",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const student = pm.response.json();",
+                  "    pm.collectionVariables.set('studentId', student.id);",
+                  "    console.log('studentId salvo:', student.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"João Pedro Santos\",\n  \"email\": \"joao.pedro@aluno.com\"\n}"
+            },
+            "url": "{{baseUrl}}/turmas/{{classId}}/alunos",
+            "description": "Matricula (ou reutiliza) um aluno na turma pelo e-mail."
+          },
+          "response": []
+        },
+        {
+          "name": "Remover aluno da turma",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/turmas/{{classId}}/alunos/{{studentId}}",
+            "description": "Remove o vínculo do aluno com a turma. Resposta esperada: `204 No Content`."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar atividades da turma",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/turmas/{{classId}}/atividades",
+            "description": "Lista homeworks/atividades vinculadas à turma."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Alunos",
+      "item": [
+        {
+          "name": "Atribuir perfil de aprendizagem",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"learningProfileId\": \"{{learningProfileId}}\"\n}"
+            },
+            "url": "{{baseUrl}}/alunos/{{studentId}}/perfil-aprendizagem",
+            "description": "Atribui um perfil de aprendizagem ao aluno.\n\nObtenha o `learningProfileId` na resposta de **Listar alunos da turma** (campo do perfil) ou via Prisma Studio / seed.\n\nPerfis disponíveis no seed incluem: \"Simplificado + glossário + TTS\", \"Microtarefas + estrutura visual\", etc."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Homeworks",
+      "item": [
+        {
+          "name": "Criar homework",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const homework = pm.response.json();",
+                  "    pm.collectionVariables.set('homeworkId', homework.id);",
+                  "    console.log('homeworkId salvo:', homework.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Leitura: O ciclo da água\",\n  \"content\": \"A água passa por três estados físicos: sólido, líquido e gasoso. No ciclo da água, a evaporação leva a água dos rios, lagos e mares para a atmosfera, onde forma nuvens. A condensação faz a água voltar à Terra em forma de chuva, neve ou granizo.\",\n  \"question\": \"Explique com suas palavras o que é evaporação e onde ela acontece no ciclo da água.\",\n  \"subject\": \"Ciências\",\n  \"classId\": \"{{classId}}\"\n}"
+            },
+            "url": "{{baseUrl}}/homeworks",
+            "description": "Cria uma atividade (homework) em rascunho para a turma.\n\nCampos `question` e `subject` são obrigatórios na validação HTTP, mesmo que a persistência atual use principalmente `title`, `content` e `classId`."
+          },
+          "response": []
+        },
+        {
+          "name": "Detalhe da homework",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/homeworks/{{homeworkId}}",
+            "description": "Retorna a homework com adaptações vinculadas."
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar rascunho da homework",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Leitura: O ciclo da água (revisado)\",\n  \"content\": \"A água existe como gelo, água líquida e vapor. A evaporação transforma água líquida em vapor quando o Sol aquece rios, lagos e mares. Esse vapor sobe, forma nuvens e depois volta à Terra na chuva.\",\n  \"question\": \"Descreva o caminho da água desde a evaporação até voltar à Terra.\",\n  \"subject\": \"Ciências\",\n  \"classId\": \"{{classId}}\"\n}"
+            },
+            "url": "{{baseUrl}}/homeworks/{{homeworkId}}",
+            "description": "Atualiza o rascunho da homework. Não dispara adaptação."
+          },
+          "response": []
+        },
+        {
+          "name": "Adaptar homework (todos os perfis da turma)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{baseUrl}}/homeworks/{{homeworkId}}/adaptar",
+            "description": "Enfileira jobs de adaptação para todos os perfis de aprendizagem presentes na turma.\n\nCorpo vazio `{}` usa os perfis dos alunos matriculados.\n\nResposta esperada: `202 Accepted`."
+          },
+          "response": []
+        },
+        {
+          "name": "Adaptar homework (perfis específicos)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"learningProfileIds\": [\"{{learningProfileId}}\"]\n}"
+            },
+            "url": "{{baseUrl}}/homeworks/{{homeworkId}}/adaptar",
+            "description": "Enfileira adaptação apenas para os perfis informados em `learningProfileIds`."
+          },
+          "response": []
+        },
+        {
+          "name": "Status da adaptação",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/homeworks/{{homeworkId}}/status-adaptacao",
+            "description": "Consulta o status das adaptações enfileiradas (polling). Útil após **Adaptar homework** — requer worker rodando com `LLM_API_KEY` configurada."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

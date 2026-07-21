@@ -112,3 +112,12 @@ export class TtsAdaptationError extends AppError {
     this.retriable = options?.retriable ?? true;
   }
 }
+
+/**
+ * Arquivo (ex.: áudio TTS de uma variante) não encontrado (Épico 5, BE-E5.7).
+ */
+export class FileNotFoundError extends AppError {
+  constructor(fileId: string) {
+    super(`Arquivo "${fileId}" não encontrado.`, 404, "FILE_NOT_FOUND");
+  }
+}

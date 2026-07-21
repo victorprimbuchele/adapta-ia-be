@@ -61,14 +61,20 @@ Não existe mount raiz `/atividades`. Use `/homeworks` para CRUD e adaptação.
 | DELETE | `/api/v1/turmas/:id` | JWT | 204 |
 | GET | `/api/v1/turmas/:id/alunos` | JWT | 200 |
 | POST | `/api/v1/turmas/:id/alunos` | JWT | 201 |
+| PATCH | `/api/v1/turmas/:id/alunos/:alunoId` | JWT | 200 |
 | DELETE | `/api/v1/turmas/:id/alunos/:alunoId` | JWT | 204 |
 | GET | `/api/v1/turmas/:id/atividades` | JWT | 200 |
+| GET | `/api/v1/perfis-aprendizagem` | JWT | 200 |
 | POST | `/api/v1/alunos/:id/perfil-aprendizagem` | JWT | 200 |
 | POST | `/api/v1/homeworks` | JWT | 201 |
 | GET | `/api/v1/homeworks/:id` | JWT | 200 |
 | PATCH | `/api/v1/homeworks/:id` | JWT | 200 |
 | POST | `/api/v1/homeworks/:id/adaptar` | JWT | 202 |
 | GET | `/api/v1/homeworks/:id/status-adaptacao` | JWT | 200 |
+| POST | `/api/v1/homeworks/:id/enviar` | JWT | 202 |
+| GET | `/api/v1/envios/:id` | JWT | 200 |
+| POST | `/api/v1/envios/:id/reenviar` | JWT | 202 |
+| GET | `/api/v1/arquivos/:id` | JWT | 200 (binário) |
 
 ---
 
@@ -264,6 +270,33 @@ interface HomeworkAdaptationStatus {
   status: AdaptationStatus;
   adaptations: ProfileAdaptationStatus[];
 }
+
+type DeliveryRecipientStatus = "pendente" | "enviado" | "falhou";
+
+interface DeliveryRecipient {
+  id: string;
+  deliveryId: string;
+  studentId: string;
+  /** Snapshot do nome/e-mail no momento do envio (não muda retroativamente). */
+  studentName: string;
+  studentEmail: string;
+  /** Null quando o perfil do aluno não tinha variante adaptada pronta. */
+  variantHomeworkId: string | null;
+  status: DeliveryRecipientStatus;
+  failedReason: string | null;
+  sentAt: ISODateString | null;
+  createdAt: ISODateString;
+  updatedAt: ISODateString;
+}
+
+interface DeliveryDetail {
+  id: string;
+  homeworkId: string;
+  teacherId: string;
+  createdAt: ISODateString;
+  updatedAt: ISODateString;
+  recipients: DeliveryRecipient[];
+}
 ```
 
 ### Regras de domínio úteis no FE
@@ -296,8 +329,8 @@ interface HomeworkAdaptationStatus {
 1. GET /turmas
 2. GET /turmas/:id/alunos
 3. POST /turmas/:id/alunos
-4. POST /alunos/:alunoId/perfil-aprendizagem  { learningProfileId }
-   ⚠️ Não há GET de catálogo de perfis na API (ver §9)
+4. GET /perfis-aprendizagem                    → popular select de perfil
+5. POST /alunos/:alunoId/perfil-aprendizagem  { learningProfileId }
 ```
 
 ### 5.3 Criar e editar atividade
@@ -319,6 +352,22 @@ interface HomeworkAdaptationStatus {
    a cada 2–3s até status agregado ∈ { concluido, erro }
    ou até cada adaptation terminar
 3. GET /homeworks/:id para carregar variantes (glossary, etc.)
+```
+
+### 5.5 Enviar (assíncrono) e reenviar
+
+```
+1. POST /homeworks/:id/enviar  (sem body)
+   → 202 { deliveryId, enqueuedCount, skippedCount }
+   Um destinatário por aluno matriculado na turma com perfil vinculado.
+   Alunos cujo perfil não tem variante pronta entram como "falhou" na hora
+   (sem job) — skippedCount conta esses.
+2. Poll GET /envios/:deliveryId
+   a cada 2–3s, olhando o status de cada `recipients[i].status`
+   (não há status agregado pronto — derive no FE: "enviando" enquanto
+   houver algum "pendente", senão pronto)
+3. Se algum recipient ficar "falhou": POST /envios/:deliveryId/reenviar
+   → reenfileira só quem falhou (com variante disponível)
 ```
 
 ---
@@ -492,6 +541,29 @@ Matricula aluno na turma. Se o e-mail já existir como usuário, reutiliza.
 
 ---
 
+#### `PATCH /api/v1/turmas/:id/alunos/:alunoId`
+
+Atualiza nome/e-mail do aluno. Escopado pela turma: o aluno precisa estar vinculado a ela.
+
+**Body (todos obrigatórios)**
+
+| Campo | Regras |
+|-------|--------|
+| `name` | trim, 2–120 |
+| `email` | e-mail válido, lower |
+
+**Sucesso `200`**
+
+```json
+{ "id": "...", "name": "...", "email": "..." }
+```
+
+**Erros:** `VALIDATION_ERROR` 400 · `CLASS_NOT_FOUND` 404 · `CLASS_ACCESS_DENIED` 403 · `STUDENT_NOT_ENROLLED` 404 · `EMAIL_ALREADY_IN_USE` 409
+
+> Como aluno é o mesmo `User` do módulo de autenticação, o e-mail é único globalmente — trocar para um e-mail já usado por outro usuário (aluno ou professor) retorna `EMAIL_ALREADY_IN_USE`.
+
+---
+
 #### `DELETE /api/v1/turmas/:id/alunos/:alunoId`
 
 Remove vínculo aluno↔turma.
@@ -512,7 +584,18 @@ Para ver variantes, use `GET /homeworks/:id`.
 
 ---
 
-### 6.5 Alunos (perfil de aprendizagem)
+### 6.5 Perfis de aprendizagem
+
+#### `GET /api/v1/perfis-aprendizagem`
+
+Lista o catálogo de perfis de aprendizagem (referência/seed — simples e compostos), ordenado por `name`. Usar para popular o select de perfil no cadastro/edição de aluno.
+
+| Auth | JWT |
+| Sucesso | **200** `LearningProfile[]` |
+
+---
+
+### 6.6 Alunos (perfil de aprendizagem)
 
 #### `POST /api/v1/alunos/:id/perfil-aprendizagem`
 
@@ -545,7 +628,7 @@ Vincula (ou substitui) o perfil do aluno. MVP: **no máximo 1 perfil ativo** por
 
 ---
 
-### 6.6 Homeworks (atividades)
+### 6.7 Homeworks (atividades)
 
 #### `POST /api/v1/homeworks`
 
@@ -645,6 +728,78 @@ Detalhes do polling na [§7](#7-adaptação-assíncrona-polling).
 
 ---
 
+### 6.8 Arquivos
+
+#### `GET /api/v1/arquivos/:id`
+
+Serve o binário de um arquivo persistido (no MVP, só áudio TTS de variantes — `Homework.audioFileId`). Sem checagem de propriedade (mesmo padrão de `POST /alunos/:id/perfil-aprendizagem`): qualquer professor autenticado com o id do arquivo consegue baixá-lo.
+
+| Auth | JWT |
+| Sucesso | **200** — corpo binário, `Content-Type` = mime type do arquivo (ex.: `audio/mpeg`) |
+| Erros | `FILE_NOT_FOUND` 404 · JWT |
+
+Uso típico no FE: `<audio src={\`${API_URL}/arquivos/${audioFileId}?token=...\`} />` não funciona com header `Authorization` — para tocar/baixar, faça `fetch` autenticado, monte um `Blob` e use `URL.createObjectURL`.
+
+---
+
+### 6.9 Homeworks — Envio
+
+#### `POST /api/v1/homeworks/:id/enviar`
+
+Cria um envio (`Delivery`) da homework geradora: um destinatário por aluno matriculado na turma com perfil de aprendizagem vinculado, usando a variante adaptada correspondente ao perfil. Enfileira o envio de e-mail (assíncrono — não espera SMTP). Só funciona em geradora com pelo menos uma variante gerada.
+
+**Sem body.**
+
+**Sucesso `202`**
+
+```json
+{ "deliveryId": "...", "enqueuedCount": 2, "skippedCount": 1 }
+```
+
+- `enqueuedCount` — destinatários com variante pronta, e-mail enfileirado
+- `skippedCount` — alunos cujo perfil não tinha variante pronta; entram como `falhou` no envio, sem job (ver `GET /envios/:id`)
+
+**Erros**
+
+| HTTP | code |
+|------|------|
+| 404 | `HOMEWORK_NOT_FOUND`, `CLASS_NOT_FOUND` |
+| 403 | `HOMEWORK_ACCESS_DENIED` |
+| 409 | `HOMEWORK_NOT_GENERATOR` |
+| 422 | `NO_RECIPIENTS_TO_DELIVER` (nenhum aluno da turma tem perfil vinculado) |
+
+---
+
+### 6.10 Envios
+
+#### `GET /api/v1/envios/:id`
+
+Status do envio, com status por destinatário (Épico 6, BE-E6.3 — tela de acompanhamento).
+
+| Auth | JWT |
+| Sucesso | **200** `DeliveryDetail` |
+| Erros | `DELIVERY_NOT_FOUND` 404 · `DELIVERY_ACCESS_DENIED` 403 |
+
+Não há campo de status agregado pronto — derive no FE a partir de `recipients[].status` (ex.: "enviando" enquanto houver algum `pendente`).
+
+---
+
+#### `POST /api/v1/envios/:id/reenviar`
+
+Reenvia apenas os destinatários com `status === "falhou"` **e** variante disponível (`variantHomeworkId !== null`). Quem já recebeu com sucesso não é afetado. Destinatários que falharam por falta de variante adaptada (perfil sem adaptação pronta) não são reenviados aqui — é preciso gerar a adaptação primeiro (`POST /homeworks/:id/adaptar`).
+
+**Sem body.**
+
+**Sucesso `202`**
+
+```json
+{ "deliveryId": "...", "requeuedCount": 1 }
+```
+
+**Erros:** `DELIVERY_NOT_FOUND` 404 · `DELIVERY_ACCESS_DENIED` 403
+
+---
+
 ## 7. Adaptação assíncrona (polling)
 
 ### Arquitetura (o que o FE precisa saber)
@@ -731,7 +886,7 @@ async function waitAdaptation(homeworkId: string, token: string) {
 | `INVALID_TOKEN` | 401 | Auth |
 | `TOKEN_EXPIRED` | 401 | Auth |
 | `INVALID_CREDENTIALS` | 401 | Login |
-| `EMAIL_ALREADY_IN_USE` | 409 | Cadastro |
+| `EMAIL_ALREADY_IN_USE` | 409 | Cadastro · Edição de aluno |
 | `WEAK_PASSWORD` | 422 | Cadastro |
 | `USER_NOT_FOUND` | 404 | `/usuarios/me` |
 | `SCHOOL_NOT_FOUND` | 404 | Criar turma |
@@ -748,6 +903,10 @@ async function waitAdaptation(homeworkId: string, token: string) {
 | `HOMEWORK_NOT_DRAFT` | 409 | PATCH em não-rascunho |
 | `HOMEWORK_NOT_GENERATOR` | 409 | Adaptar/status em variante |
 | `NO_LEARNING_PROFILES_TO_ADAPT` | 422 | Adaptar sem perfis na turma |
+| `FILE_NOT_FOUND` | 404 | Download de arquivo (áudio) |
+| `DELIVERY_NOT_FOUND` | 404 | Envios |
+| `DELIVERY_ACCESS_DENIED` | 403 | Envio de outro professor |
+| `NO_RECIPIENTS_TO_DELIVER` | 422 | Enviar sem aluno com perfil vinculado |
 | `INTERNAL_SERVER_ERROR` | 500 | Inesperado |
 
 Códigos de worker (`LLM_ADAPTATION_FAILED`, `TTS_ADAPTATION_FAILED`, …) **não** voltam síncronos no HTTP do `/adaptar`; o FE os vê indiretamente via `status: "erro"`.
@@ -758,28 +917,26 @@ Códigos de worker (`LLM_ADAPTATION_FAILED`, `TTS_ADAPTATION_FAILED`, …) **nã
 
 Estas limitações afetam a integração do FE no MVP atual:
 
-1. **Sem `GET /learning-profiles` (ou similar)**  
-   O catálogo existe no seed do banco, mas **não há endpoint** para listar perfis. Opções temporárias:
-   - Hardcode dos nomes/ids após seed em ambiente conhecido
-   - Endpoint a ser adicionado no backend (recomendado)
-
-2. **Sem `GET /subjects`**  
+1. **Sem `GET /subjects`**  
    `subject` é obrigatório no formulário de homework, mas **não é persistido** e não há listagem de disciplinas na API.
 
-3. **`question` / `subject` no create/patch**  
+2. **`question` / `subject` no create/patch**  
    Validados no boundary HTTP, **não gravados** no modelo `Homework`. O FE pode manter localmente para UX do formulário, mas não esperar no `GET`.
 
-4. **`GET /turmas/:id` → `students: []`**  
+3. **`GET /turmas/:id` → `students: []`**  
    Sempre vazio. Use `GET /turmas/:id/alunos`.
 
-5. **Áudio TTS**  
-   Variante concluída com TTS tem `audioFileId`, mas **não há endpoint público de download/stream** do arquivo neste MVP. Planeje UI de “áudio disponível” / endpoint futuro.
+4. **Sem geração de PDF**  
+   Não há endpoint de PDF por perfil neste MVP (nem geração no backend). O e-mail de envio (`POST /homeworks/:id/enviar`) manda o conteúdo adaptado **inline no corpo do HTML**, sem anexo. O FE deve tratar PDF como funcionalidade futura — sem preview/download por enquanto.
+
+5. **Sem status agregado no envio**  
+   `GET /envios/:id` não retorna um `status` de topo como o de adaptação — só `recipients[].status`. Derive o agregado no FE (ex.: "enviando" enquanto houver `pendente`).
 
 6. **Sem refresh token**  
    Expiração curta (`15m` default). Tratar `TOKEN_EXPIRED` com redirect para login.
 
-7. **Worker obrigatório para adaptação**  
-   `pnpm worker:dev` (ou serviço `worker` no Compose) precisa estar no ar.
+7. **Worker obrigatório para adaptação e envio**  
+   `pnpm worker:dev` (ou serviço `worker` no Compose) precisa estar no ar. Também exige `LLM_API_KEY` (simplificação de texto), `TTS_API_KEY` (áudio) e `SMTP_HOST`/`SMTP_USER`/`SMTP_PASS`/`SMTP_FROM` (envio de e-mail) configuradas no `.env` do worker — sem elas o worker não sobe.
 
 8. **CORS**  
    Confirme origem permitida no deploy; em local com FE em outra porta pode ser necessário ajustar.
@@ -792,14 +949,16 @@ Estas limitações afetam a integração do FE no MVP atual:
 - [ ] Interceptor Axios/fetch anexando `Authorization: Bearer`
 - [ ] Tratamento global por `error.code` (401 → login; 403 toast; 422 formulário)
 - [ ] Fluxo cadastro → login → me
-- [ ] Selects escola/série a partir dos GETs de referência
-- [ ] CRUD turma + matrícula + perfil do aluno
+- [ ] Selects escola/série/perfil de aprendizagem a partir dos GETs de referência
+- [ ] CRUD turma + matrícula/edição/remoção de aluno + perfil do aluno
 - [ ] Formulário homework enviando `question`/`subject` mesmo sem persistência
 - [ ] Lista de atividades via `/turmas/:id/atividades`
 - [ ] Detalhe via `/homeworks/:id` (geradora + `adaptations`)
 - [ ] Adaptar + poll de status até `concluido`/`erro`
 - [ ] UI de glossário só em variantes com `glossary`
 - [ ] Não editar homework com `isDraft === false` via PATCH (backend rejeita)
+- [ ] Enviar + poll de `/envios/:id` até todos os `recipients` saírem de `pendente`
+- [ ] Reenvio manual só para `recipients` com `status === "falhou"` e `variantHomeworkId` presente
 
 ---
 
@@ -893,4 +1052,4 @@ Os **ids** são gerados no seed (`cuid`) e mudam por ambiente — por isso o cat
 
 ---
 
-*Documento gerado para integração FE · backend adapta-ia-be · Épicos 1–5 (MVP).*
+*Documento gerado para integração FE · backend adapta-ia-be · Épicos 1–6 (MVP).*

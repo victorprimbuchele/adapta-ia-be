@@ -16,4 +16,6 @@ export interface StoredObject {
 
 export interface ObjectStoragePort {
   store(input: StoreObjectInput): Promise<StoredObject>;
+  /** Lê o conteúdo bruto a partir da chave persistida em `File.path`. */
+  read(key: string): Promise<Buffer>;
 }

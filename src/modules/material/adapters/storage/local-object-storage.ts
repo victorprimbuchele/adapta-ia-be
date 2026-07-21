@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type {
@@ -28,5 +28,12 @@ export class LocalObjectStorage implements ObjectStoragePort {
     await writeFile(absolutePath, input.data);
 
     return { path: relativeKey };
+  }
+
+  async read(key: string): Promise<Buffer> {
+    const relativeKey = key.replace(/^\/+/, "");
+    const absolutePath = path.join(this.rootDir, relativeKey);
+
+    return readFile(absolutePath);
   }
 }

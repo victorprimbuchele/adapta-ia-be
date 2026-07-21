@@ -11,6 +11,13 @@ export class PrismaLearningProfileRepository
 {
   constructor(private readonly prisma: PrismaClient) {}
 
+  async findAll(): Promise<LearningProfile[]> {
+    return this.prisma.learningProfile.findMany({
+      select: { id: true, name: true, prompt: true },
+      orderBy: { name: "asc" },
+    });
+  }
+
   async findById(id: string): Promise<LearningProfile | null> {
     return this.prisma.learningProfile.findUnique({
       where: { id },

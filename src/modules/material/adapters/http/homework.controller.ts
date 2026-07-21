@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 
 import { getAuthenticatedUser } from "../../../../shared/auth/authenticate.js";
+import type { CreateDelivery } from "../../../entrega/application/create-delivery.js";
 import type { CreateGeneratorHomework } from "../../application/create-generator-homework.js";
 import type { EnqueueHomeworkAdaptation } from "../../application/enqueue-homework-adaptation.js";
 import type { GetHomeworkAdaptationStatus } from "../../application/get-homework-adaptation-status.js";
@@ -17,6 +18,7 @@ export class HomeworkController {
     private readonly getHomeworkDetail: GetHomeworkDetail,
     private readonly enqueueHomeworkAdaptation: EnqueueHomeworkAdaptation,
     private readonly getHomeworkAdaptationStatus: GetHomeworkAdaptationStatus,
+    private readonly createDelivery: CreateDelivery,
   ) {}
 
   create = async (req: Request, res: Response): Promise<void> => {
@@ -88,5 +90,19 @@ export class HomeworkController {
     );
 
     res.status(200).json(result);
+  };
+
+  send = async (req: Request, res: Response): Promise<void> => {
+    // Cria o envio e enfileira os e-mails, retorna imediatamente (BE-E6.1).
+    const id = req.params["id"] as string;
+    const { sub: teacherId } = getAuthenticatedUser(req);
+
+    const result = await this.createDelivery.execute({ homeworkId: id, teacherId });
+
+    res.status(202).json({
+      deliveryId: result.delivery.id,
+      enqueuedCount: result.enqueuedCount,
+      skippedCount: result.skippedCount,
+    });
   };
 }

@@ -16,4 +16,12 @@ export class InMemoryObjectStorage implements ObjectStoragePort {
     this.objects.set(input.key, input.data);
     return { path: input.key };
   }
+
+  async read(key: string): Promise<Buffer> {
+    const data = this.objects.get(key);
+    if (!data) {
+      throw new Error(`InMemoryObjectStorage: object "${key}" not found.`);
+    }
+    return data;
+  }
 }

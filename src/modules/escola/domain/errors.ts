@@ -91,6 +91,17 @@ export class StudentNotFoundError extends AppError {
 }
 
 /**
+ * Novo e-mail informado na edição do aluno já pertence a outro usuário
+ * (aluno é um `User` — e-mail é único na tabela `users`, ver Épico 3,
+ * BE-E3.1).
+ */
+export class StudentEmailAlreadyInUseError extends AppError {
+  constructor(email: string) {
+    super(`O e-mail "${email}" já está em uso.`, 409, "EMAIL_ALREADY_IN_USE");
+  }
+}
+
+/**
  * Perfil de aprendizagem informado não existe no catálogo de referência
  * (ver Épico 3, BE-E3.2).
  */

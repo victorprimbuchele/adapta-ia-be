@@ -14,6 +14,10 @@ export class InMemoryLearningProfileRepository
     this.profiles = profiles;
   }
 
+  async findAll(): Promise<LearningProfile[]> {
+    return [...this.profiles].sort((a, b) => a.name.localeCompare(b.name));
+  }
+
   async findById(id: string): Promise<LearningProfile | null> {
     return this.profiles.find((profile) => profile.id === id) ?? null;
   }

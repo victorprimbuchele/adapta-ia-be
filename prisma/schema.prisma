@@ -25,6 +25,8 @@ model User {
   userClasses           UserClass[]
   userLearningProfiles  UserLearningProfile[]
   homeworks             Homework[]
+  deliveries            Delivery[]
+  deliveryRecipients    DeliveryRecipient[] @relation("DeliveryRecipientStudent")
 
   @@map("users")
 }
@@ -214,6 +216,8 @@ model Homework {
   audioFile       File?            @relation("HomeworkAudioFile", fields: [audioFileId], references: [id])
   class           Class            @relation(fields: [classId], references: [id])
   teacher         User             @relation(fields: [teacherId], references: [id])
+  deliveries               Delivery[]
+  deliveryRecipientVariant DeliveryRecipient[] @relation("DeliveryRecipientVariant")
 
   /// Uma variante por par geradora+perfil (BE-E5.5).
   @@unique([homeworkId, learningProfileId])
@@ -222,4 +226,61 @@ model Homework {
   @@index([learningProfileId])
   @@index([classId])
   @@map("homeworks")
+}
+
+/// Status de envio de um destinatário individual (Épico 6, BE-E6.1).
+enum DeliveryRecipientStatus {
+  pendente
+  enviado
+  falhou
+}
+
+/// Um "envio" de uma homework geradora — dispara um e-mail por aluno
+/// matriculado na turma com perfil de aprendizagem vinculado, usando a
+/// variante adaptada correspondente (Épico 6, BE-E6.1). Assíncrono: a API
+/// só cria o registro e enfileira; o worker envia de fato.
+model Delivery {
+  id         String   @id @default(cuid())
+  homeworkId String   @map("homework_id")
+  teacherId  String   @map("teacher_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  homework   Homework            @relation(fields: [homeworkId], references: [id])
+  teacher    User                @relation(fields: [teacherId], references: [id])
+  recipients DeliveryRecipient[]
+
+  @@index([homeworkId])
+  @@index([teacherId])
+  @@map("deliveries")
+}
+
+/// Destinatário individual de um `Delivery` — um aluno + a variante
+/// adaptada que deve receber (Épico 6, BE-E6.1). `falhou` sem
+/// `variantHomeworkId` utilizável significa que o perfil do aluno não
+/// tinha uma variante pronta no momento do envio.
+model DeliveryRecipient {
+  id                String                  @id @default(cuid())
+  deliveryId        String                  @map("delivery_id")
+  studentId         String                  @map("student_id")
+  /// Snapshot do nome/e-mail no momento do envio (registro histórico —
+  /// não muda retroativamente se o aluno editar o cadastro depois).
+  studentName       String                  @map("student_name")
+  studentEmail      String                  @map("student_email")
+  variantHomeworkId String?                 @map("variant_homework_id")
+  status            DeliveryRecipientStatus @default(pendente)
+  failedReason      String?                 @map("failed_reason")
+  sentAt            DateTime?               @map("sent_at")
+  createdAt         DateTime                @default(now()) @map("created_at")
+  updatedAt         DateTime                @updatedAt @map("updated_at")
+
+  delivery        Delivery  @relation(fields: [deliveryId], references: [id])
+  student         User      @relation("DeliveryRecipientStudent", fields: [studentId], references: [id])
+  variantHomework Homework? @relation("DeliveryRecipientVariant", fields: [variantHomeworkId], references: [id])
+
+  /// Um aluno nunca é destinatário duplicado no mesmo envio.
+  @@unique([deliveryId, studentId])
+  @@index([deliveryId])
+  @@index([studentId])
+  @@map("delivery_recipients")
 }

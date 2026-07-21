@@ -7,6 +7,7 @@ import type { Student } from "../../domain/student.js";
 import type {
   CreateStudentData,
   StudentRepository,
+  UpdateStudentData,
 } from "../../ports/student-repository.js";
 
 const SALT_ROUNDS = 10;
@@ -61,6 +62,14 @@ export class PrismaStudentRepository implements StudentRepository {
         email: data.email,
         passwordHash,
       },
+      select: { id: true, name: true, email: true },
+    });
+  }
+
+  async update(id: string, data: UpdateStudentData): Promise<Student> {
+    return this.prisma.user.update({
+      where: { id },
+      data: { name: data.name, email: data.email },
       select: { id: true, name: true, email: true },
     });
   }

@@ -2,6 +2,7 @@ import type { Student } from "../../domain/student.js";
 import type {
   CreateStudentData,
   StudentRepository,
+  UpdateStudentData,
 } from "../../ports/student-repository.js";
 
 let nextId = 1;
@@ -34,6 +35,16 @@ export class InMemoryStudentRepository implements StudentRepository {
   async create(data: CreateStudentData): Promise<Student> {
     const student: Student = { id: `student-${nextId++}`, ...data };
     this.students.push(student);
+    return student;
+  }
+
+  async update(id: string, data: UpdateStudentData): Promise<Student> {
+    const student = this.students.find((candidate) => candidate.id === id);
+    if (!student) {
+      throw new Error(`InMemoryStudentRepository: student "${id}" not found.`);
+    }
+    student.name = data.name;
+    student.email = data.email;
     return student;
   }
 }
