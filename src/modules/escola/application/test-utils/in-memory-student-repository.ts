@@ -41,7 +41,7 @@ export class InMemoryStudentRepository implements StudentRepository {
   async update(id: string, data: UpdateStudentData): Promise<Student> {
     const student = this.students.find((candidate) => candidate.id === id);
     if (!student) {
-      throw new Error(`InMemoryStudentRepository: student "${id}" not found.`);
+      throw new Error(`Student ${id} not found in memory`);
     }
     student.name = data.name;
     student.email = data.email;

@@ -13,6 +13,8 @@ type HomeworkRow = {
   id: string;
   title: string;
   content: string;
+  subject: string | null;
+  question: string | null;
   glossary: Prisma.JsonValue | null;
   isDraft: boolean;
   homeworkId: string | null;
@@ -36,6 +38,8 @@ export class PrismaHomeworkRepository implements HomeworkRepository {
       data: {
         title: data.title,
         content: data.content,
+        subject: data.subject ?? null,
+        question: data.question ?? null,
         classId: data.classId,
         teacherId: data.teacherId,
         isDraft: true,
@@ -84,6 +88,8 @@ export class PrismaHomeworkRepository implements HomeworkRepository {
       data: {
         title: data.title,
         content: data.content,
+        subject: data.subject !== undefined ? data.subject : undefined,
+        question: data.question !== undefined ? data.question : undefined,
       },
     });
 
@@ -108,6 +114,8 @@ export class PrismaHomeworkRepository implements HomeworkRepository {
       create: {
         title: data.title,
         content: data.content,
+        subject: data.subject ?? null,
+        question: data.question ?? null,
         glossary: glossaryJson,
         isDraft: false,
         homeworkId: data.homeworkId,
@@ -118,6 +126,8 @@ export class PrismaHomeworkRepository implements HomeworkRepository {
       update: {
         title: data.title,
         content: data.content,
+        subject: data.subject !== undefined ? data.subject : undefined,
+        question: data.question !== undefined ? data.question : undefined,
         glossary: glossaryJson,
         isDraft: false,
       },
@@ -144,6 +154,8 @@ function toDomain(row: HomeworkRow): Homework {
     id: row.id,
     title: row.title,
     content: row.content,
+    subject: row.subject ?? null,
+    question: row.question ?? null,
     glossary: toGlossary(row.glossary),
     isDraft: row.isDraft,
     homeworkId: row.homeworkId,

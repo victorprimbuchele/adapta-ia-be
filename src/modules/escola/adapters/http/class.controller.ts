@@ -9,9 +9,11 @@ import type { GetClassDetail } from "../../application/get-class-detail.js";
 import type { ListClasses } from "../../application/list-classes.js";
 import type { ListClassStudents } from "../../application/list-class-students.js";
 import type { RemoveStudentFromClass } from "../../application/remove-student-from-class.js";
+import type { UpdateClass } from "../../application/update-class.js";
 import type { UpdateStudent } from "../../application/update-student.js";
 import { createClassSchema } from "./create-class.dto.js";
 import { enrollStudentSchema } from "./enroll-student.dto.js";
+import { updateClassSchema } from "./update-class.dto.js";
 import { updateStudentSchema } from "./update-student.dto.js";
 
 export class ClassController {
@@ -24,16 +26,17 @@ export class ClassController {
     private readonly listClassStudents: ListClassStudents,
     private readonly removeStudentFromClass: RemoveStudentFromClass,
     private readonly listClassHomeworks: ListClassHomeworks,
+    private readonly updateClass: UpdateClass,
     private readonly updateStudentUseCase: UpdateStudent,
   ) {}
 
   create = async (req: Request, res: Response): Promise<void> => {
-    const { name, schoolId, gradeId } = createClassSchema.parse(req.body);
+    const { name, schoolName, gradeId } = createClassSchema.parse(req.body);
     const { sub: teacherId } = getAuthenticatedUser(req);
 
     const createdClass = await this.createClass.execute({
       name,
-      schoolId,
+      schoolName,
       gradeId,
       teacherId,
     });
@@ -100,23 +103,6 @@ export class ClassController {
     res.status(200).json(homeworks);
   };
 
-  updateStudent = async (req: Request, res: Response): Promise<void> => {
-    const { name, email } = updateStudentSchema.parse(req.body);
-    const classId = req.params["id"] as string;
-    const studentId = req.params["alunoId"] as string;
-    const { sub: teacherId } = getAuthenticatedUser(req);
-
-    const student = await this.updateStudentUseCase.execute({
-      classId,
-      teacherId,
-      studentId,
-      name,
-      email,
-    });
-
-    res.status(200).json(student);
-  };
-
   removeStudent = async (req: Request, res: Response): Promise<void> => {
     const classId = req.params["id"] as string;
     const studentId = req.params["alunoId"] as string;
@@ -129,5 +115,41 @@ export class ClassController {
     });
 
     res.status(204).send();
+  };
+
+  update = async (req: Request, res: Response): Promise<void> => {
+    const { name, schoolName, gradeId } = updateClassSchema.parse(req.body);
+    const classId = req.params["id"] as string;
+    const { sub: teacherId } = getAuthenticatedUser(req);
+
+    const updated = await this.updateClass.execute({
+      classId,
+      teacherId,
+      name,
+      schoolName,
+      gradeId,
+    });
+
+    res.status(200).json(updated);
+  };
+
+  updateStudent = async (req: Request, res: Response): Promise<void> => {
+    const { name, email, learningProfileId } = updateStudentSchema.parse(
+      req.body,
+    );
+    const classId = req.params["id"] as string;
+    const studentId = req.params["alunoId"] as string;
+    const { sub: teacherId } = getAuthenticatedUser(req);
+
+    const updated = await this.updateStudentUseCase.execute({
+      classId,
+      teacherId,
+      studentId,
+      name,
+      email,
+      learningProfileId,
+    });
+
+    res.status(200).json(updated);
   };
 }

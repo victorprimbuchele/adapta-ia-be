@@ -8,6 +8,8 @@ import type { TeacherRepository } from "../ports/teacher-repository.js";
 export interface CreateGeneratorHomeworkInput {
   title: string;
   content: string;
+  subject?: string | null;
+  question?: string | null;
   classId: string;
   teacherId: string;
 }
@@ -40,6 +42,8 @@ export class CreateGeneratorHomework {
     return this.homeworkRepository.createGenerator({
       title: input.title,
       content: input.content,
+      subject: input.subject ?? null,
+      question: input.question ?? null,
       classId: input.classId,
       teacherId: input.teacherId,
     });

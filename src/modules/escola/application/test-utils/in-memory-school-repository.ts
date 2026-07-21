@@ -16,4 +16,21 @@ export class InMemorySchoolRepository implements SchoolRepository {
   async findById(id: string): Promise<School | null> {
     return this.schools.find((school) => school.id === id) ?? null;
   }
+
+  async findByName(name: string): Promise<School | null> {
+    return this.schools.find((school) => school.name.toLowerCase() === name.toLowerCase()) ?? null;
+  }
+
+  async create(name: string, city: string, state: string): Promise<School> {
+    const school: School = {
+      id: `school-${this.schools.length + 1}`,
+      name,
+      city,
+      state,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.schools.push(school);
+    return school;
+  }
 }

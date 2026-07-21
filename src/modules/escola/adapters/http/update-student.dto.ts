@@ -12,6 +12,7 @@ export const updateStudentSchema = z.object({
     .min(1, "E-mail do aluno é obrigatório.")
     .toLowerCase()
     .pipe(z.email("E-mail inválido.")),
+  learningProfileId: z.string().optional(),
 });
 
 export type UpdateStudentBody = z.infer<typeof updateStudentSchema>;

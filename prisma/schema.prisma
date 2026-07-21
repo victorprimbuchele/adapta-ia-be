@@ -194,6 +194,8 @@ model Homework {
   id                String   @id @default(cuid())
   title             String
   content           String
+  subject           String?
+  question          String?
   /// Glossário estruturado `[{ term, definition }]` na variante adaptada;
   /// null na geradora ou quando o perfil não pede glossário (BE-E5.4).
   glossary          Json?

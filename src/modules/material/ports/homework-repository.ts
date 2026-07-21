@@ -4,6 +4,8 @@ import type { Homework } from "../domain/homework.js";
 export interface CreateGeneratorHomeworkData {
   title: string;
   content: string;
+  subject?: string | null;
+  question?: string | null;
   classId: string;
   teacherId: string;
 }
@@ -11,12 +13,16 @@ export interface CreateGeneratorHomeworkData {
 export interface UpdateDraftHomeworkData {
   title: string;
   content: string;
+  subject?: string | null;
+  question?: string | null;
 }
 
 /** Dados da variante adaptada (BE-E5.5): sempre vinculada à geradora e ao perfil. */
 export interface UpsertAdaptationHomeworkData {
   title: string;
   content: string;
+  subject?: string | null;
+  question?: string | null;
   glossary: GlossaryEntry[] | null;
   homeworkId: string;
   learningProfileId: string;

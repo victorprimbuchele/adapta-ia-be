@@ -8,6 +8,8 @@ export interface UpdateDraftHomeworkInput {
   teacherId: string;
   title: string;
   content: string;
+  subject?: string | null;
+  question?: string | null;
 }
 
 /**
@@ -31,6 +33,8 @@ export class UpdateDraftHomework {
     return this.homeworkRepository.updateDraft(input.homeworkId, {
       title: input.title,
       content: input.content,
+      subject: input.subject,
+      question: input.question,
     });
   }
 }

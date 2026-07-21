@@ -1,7 +1,6 @@
 import { CreateClass } from "./create-class.js";
 import {
   GradeNotFoundError,
-  SchoolNotFoundError,
   TeacherNotFoundError,
 } from "../domain/errors.js";
 import { InMemoryClassRepository } from "./test-utils/in-memory-class-repository.js";
@@ -60,7 +59,7 @@ describe("CreateClass", () => {
 
     const createdClass = await createClass.execute({
       name: "Turma A",
-      schoolId: "school-1",
+      schoolName: "Escola Municipal João de Barro",
       gradeId: "grade-1",
       teacherId: "teacher-1",
     });
@@ -74,7 +73,7 @@ describe("CreateClass", () => {
     expect(classRepository.classes).toHaveLength(1);
   });
 
-  it("rejeita a criação quando a escola informada não existe", async () => {
+  it("cria uma nova escola quando a escola informada por nome não existe", async () => {
     const {
       schoolRepository,
       gradeRepository,
@@ -88,15 +87,22 @@ describe("CreateClass", () => {
       teacherRepository,
     );
 
-    await expect(
-      createClass.execute({
-        name: "Turma A",
-        schoolId: "school-inexistente",
-        gradeId: "grade-1",
-        teacherId: "teacher-1",
-      }),
-    ).rejects.toBeInstanceOf(SchoolNotFoundError);
-    expect(classRepository.classes).toHaveLength(0);
+    const createdClass = await createClass.execute({
+      name: "Turma A",
+      schoolName: "Nova Escola",
+      gradeId: "grade-1",
+      teacherId: "teacher-1",
+    });
+
+    const school = await schoolRepository.findByName("Nova Escola");
+    expect(school).not.toBeNull();
+    expect(createdClass).toMatchObject({
+      name: "Turma A",
+      schoolId: school!.id,
+      gradeId: "grade-1",
+      teacherId: "teacher-1",
+    });
+    expect(classRepository.classes).toHaveLength(1);
   });
 
   it("rejeita a criação quando a série informada não existe", async () => {
@@ -116,7 +122,7 @@ describe("CreateClass", () => {
     await expect(
       createClass.execute({
         name: "Turma A",
-        schoolId: "school-1",
+        schoolName: "Escola Municipal João de Barro",
         gradeId: "grade-inexistente",
         teacherId: "teacher-1",
       }),
@@ -141,7 +147,7 @@ describe("CreateClass", () => {
     await expect(
       createClass.execute({
         name: "Turma A",
-        schoolId: "school-1",
+        schoolName: "Escola Municipal João de Barro",
         gradeId: "grade-1",
         teacherId: "professor-inexistente",
       }),

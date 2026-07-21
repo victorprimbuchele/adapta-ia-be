@@ -3,6 +3,7 @@ import type { Class } from "../../domain/class.js";
 import type {
   ClassRepository,
   CreateClassData,
+  UpdateClassData,
 } from "../../ports/class-repository.js";
 
 export class PrismaClassRepository implements ClassRepository {
@@ -10,6 +11,13 @@ export class PrismaClassRepository implements ClassRepository {
 
   async create(data: CreateClassData): Promise<Class> {
     return this.prisma.class.create({ data });
+  }
+
+  async update(id: string, data: UpdateClassData): Promise<Class> {
+    return this.prisma.class.update({
+      where: { id },
+      data,
+    });
   }
 
   async findByTeacherId(teacherId: string): Promise<Class[]> {

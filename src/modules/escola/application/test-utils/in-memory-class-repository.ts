@@ -2,6 +2,7 @@ import type { Class } from "../../domain/class.js";
 import type {
   ClassRepository,
   CreateClassData,
+  UpdateClassData,
 } from "../../ports/class-repository.js";
 
 let nextId = 1;
@@ -29,6 +30,18 @@ export class InMemoryClassRepository implements ClassRepository {
 
     this.classes.push(createdClass);
     return createdClass;
+  }
+
+  async update(id: string, data: UpdateClassData): Promise<Class> {
+    const klass = this.classes.find((candidate) => candidate.id === id);
+    if (!klass) {
+      throw new Error(`Class ${id} not found in memory`);
+    }
+    klass.name = data.name;
+    klass.schoolId = data.schoolId;
+    klass.gradeId = data.gradeId;
+    klass.updatedAt = new Date();
+    return klass;
   }
 
   async findByTeacherId(teacherId: string): Promise<Class[]> {

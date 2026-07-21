@@ -15,6 +15,8 @@ export interface Homework {
   id: string;
   title: string;
   content: string;
+  subject?: string | null;
+  question?: string | null;
   glossary: GlossaryEntry[] | null;
   isDraft: boolean;
   homeworkId: string | null;

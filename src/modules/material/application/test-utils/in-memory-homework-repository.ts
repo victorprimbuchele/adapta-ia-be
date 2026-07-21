@@ -21,6 +21,8 @@ export class InMemoryHomeworkRepository implements HomeworkRepository {
       id: `homework-${nextId++}`,
       title: data.title,
       content: data.content,
+      subject: data.subject ?? null,
+      question: data.question ?? null,
       glossary: null,
       isDraft: true,
       homeworkId: null,
@@ -67,6 +69,8 @@ export class InMemoryHomeworkRepository implements HomeworkRepository {
 
     homework.title = data.title;
     homework.content = data.content;
+    if (data.subject !== undefined) homework.subject = data.subject;
+    if (data.question !== undefined) homework.question = data.question;
     homework.updatedAt = new Date();
 
     return homework;
@@ -84,6 +88,8 @@ export class InMemoryHomeworkRepository implements HomeworkRepository {
     if (existing) {
       existing.title = data.title;
       existing.content = data.content;
+      if (data.subject !== undefined) existing.subject = data.subject;
+      if (data.question !== undefined) existing.question = data.question;
       existing.glossary = data.glossary;
       existing.isDraft = false;
       existing.updatedAt = new Date();
@@ -95,6 +101,8 @@ export class InMemoryHomeworkRepository implements HomeworkRepository {
       id: `homework-${nextId++}`,
       title: data.title,
       content: data.content,
+      subject: data.subject ?? null,
+      question: data.question ?? null,
       glossary: data.glossary,
       isDraft: false,
       homeworkId: data.homeworkId,

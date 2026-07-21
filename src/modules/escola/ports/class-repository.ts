@@ -7,8 +7,15 @@ export interface CreateClassData {
   teacherId: string;
 }
 
+export interface UpdateClassData {
+  name: string;
+  schoolId: string;
+  gradeId: string;
+}
+
 export interface ClassRepository {
   create(data: CreateClassData): Promise<Class>;
+  update(id: string, data: UpdateClassData): Promise<Class>;
   /** Nunca retorna turmas com soft delete (`deletedAt` preenchido). */
   findByTeacherId(teacherId: string): Promise<Class[]>;
   /** Nunca retorna turmas com soft delete (`deletedAt` preenchido). */

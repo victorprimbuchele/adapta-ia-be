@@ -12,4 +12,25 @@ export class PrismaSchoolRepository implements SchoolRepository {
   async findById(id: string): Promise<School | null> {
     return this.prisma.school.findUnique({ where: { id } });
   }
+
+  async findByName(name: string): Promise<School | null> {
+    return this.prisma.school.findFirst({
+      where: {
+        name: {
+          equals: name,
+          mode: "insensitive",
+        },
+      },
+    });
+  }
+
+  async create(name: string, city: string, state: string): Promise<School> {
+    return this.prisma.school.create({
+      data: {
+        name,
+        city,
+        state,
+      },
+    });
+  }
 }

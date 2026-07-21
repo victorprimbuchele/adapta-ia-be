@@ -12,9 +12,11 @@ import { GetClassDetail } from "../../application/get-class-detail.js";
 import { ListClasses } from "../../application/list-classes.js";
 import { ListClassStudents } from "../../application/list-class-students.js";
 import { RemoveStudentFromClass } from "../../application/remove-student-from-class.js";
+import { UpdateClass } from "../../application/update-class.js";
 import { UpdateStudent } from "../../application/update-student.js";
 import { PrismaClassRepository } from "../persistence/prisma-class-repository.js";
 import { PrismaGradeRepository } from "../persistence/prisma-grade-repository.js";
+import { PrismaLearningProfileRepository } from "../persistence/prisma-learning-profile-repository.js";
 import { PrismaSchoolRepository } from "../persistence/prisma-school-repository.js";
 import { PrismaStudentRepository } from "../persistence/prisma-student-repository.js";
 import { PrismaTeacherRepository } from "../persistence/prisma-teacher-repository.js";
@@ -56,14 +58,22 @@ const removeStudentFromClass = new RemoveStudentFromClass(
   classRepository,
   userClassRepository,
 );
-const updateStudent = new UpdateStudent(
-  classRepository,
-  studentRepository,
-  userClassRepository,
-);
 const listClassHomeworks = new ListClassHomeworks(
   classRepository,
   homeworkRepository,
+);
+const learningProfileRepository = new PrismaLearningProfileRepository(prisma);
+const updateClass = new UpdateClass(
+  classRepository,
+  schoolRepository,
+  gradeRepository,
+);
+const updateStudent = new UpdateStudent(
+  classRepository,
+  userClassRepository,
+  studentRepository,
+  learningProfileRepository,
+  userLearningProfileRepository,
 );
 const classController = new ClassController(
   createClass,
@@ -74,37 +84,39 @@ const classController = new ClassController(
   listClassStudents,
   removeStudentFromClass,
   listClassHomeworks,
+  updateClass,
   updateStudent,
 );
 
 export const classRouter = Router();
 
-classRouter.post("/", authenticate, asyncHandler(classController.create));
-classRouter.get("/", authenticate, asyncHandler(classController.list));
-classRouter.get("/:id", authenticate, asyncHandler(classController.show));
-classRouter.delete("/:id", authenticate, asyncHandler(classController.remove));
+classRouter.post("/", authenticate, asyncHandler((req, res) => classController.create(req, res)));
+classRouter.get("/", authenticate, asyncHandler((req, res) => classController.list(req, res)));
+classRouter.get("/:id", authenticate, asyncHandler((req, res) => classController.show(req, res)));
+classRouter.delete("/:id", authenticate, asyncHandler((req, res) => classController.remove(req, res)));
 classRouter.get(
   "/:id/alunos",
   authenticate,
-  asyncHandler(classController.listStudents),
+  asyncHandler((req, res) => classController.listStudents(req, res)),
 );
 classRouter.post(
   "/:id/alunos",
   authenticate,
-  asyncHandler(classController.enroll),
+  asyncHandler((req, res) => classController.enroll(req, res)),
 );
 classRouter.patch(
   "/:id/alunos/:alunoId",
   authenticate,
-  asyncHandler(classController.updateStudent),
+  asyncHandler((req, res) => classController.updateStudent(req, res)),
 );
 classRouter.delete(
   "/:id/alunos/:alunoId",
   authenticate,
-  asyncHandler(classController.removeStudent),
+  asyncHandler((req, res) => classController.removeStudent(req, res)),
 );
 classRouter.get(
   "/:id/atividades",
   authenticate,
-  asyncHandler(classController.listHomeworks),
+  asyncHandler((req, res) => classController.listHomeworks(req, res)),
 );
+classRouter.put("/:id", authenticate, asyncHandler((req, res) => classController.update(req, res)));

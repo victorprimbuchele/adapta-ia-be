@@ -23,14 +23,15 @@ export class HomeworkController {
 
   create = async (req: Request, res: Response): Promise<void> => {
     // Validates the full structured form (BE-E4.2). Persists title, main
-    // content and class; question and subject are required at the boundary
-    // and reject incomplete payloads with clear errors.
-    const { title, content, classId } = createHomeworkSchema.parse(req.body);
+    // content, subject, question and class.
+    const { title, content, subject, question, classId } = createHomeworkSchema.parse(req.body);
     const { sub: teacherId } = getAuthenticatedUser(req);
 
     const homework = await this.createGeneratorHomework.execute({
       title,
       content,
+      subject,
+      question,
       classId,
       teacherId,
     });
@@ -51,7 +52,7 @@ export class HomeworkController {
   update = async (req: Request, res: Response): Promise<void> => {
     // Saves draft changes only (BE-E4.3). Does not generate adaptations.
     const id = req.params["id"] as string;
-    const { title, content } = updateHomeworkSchema.parse(req.body);
+    const { title, content, subject, question } = updateHomeworkSchema.parse(req.body);
     const { sub: teacherId } = getAuthenticatedUser(req);
 
     const homework = await this.updateDraftHomework.execute({
@@ -59,6 +60,8 @@ export class HomeworkController {
       teacherId,
       title,
       content,
+      subject,
+      question,
     });
 
     res.status(200).json(homework);

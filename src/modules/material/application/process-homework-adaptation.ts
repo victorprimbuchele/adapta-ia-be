@@ -89,6 +89,8 @@ export class ProcessHomeworkAdaptation {
     let variant = await this.homeworkRepository.upsertAdaptation({
       title: adapted.title,
       content: adapted.content,
+      subject: homework.subject,
+      question: homework.question,
       glossary,
       homeworkId: homework.id,
       learningProfileId: job.learningProfileId,

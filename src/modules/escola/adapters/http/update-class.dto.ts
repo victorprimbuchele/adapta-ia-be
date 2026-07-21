@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const createClassSchema = z.object({
+export const updateClassSchema = z.object({
   name: z
     .string({ error: "Nome da turma é obrigatório." })
     .trim()
@@ -16,4 +16,4 @@ export const createClassSchema = z.object({
     .min(1, "Série é obrigatória."),
 });
 
-export type CreateClassInput = z.infer<typeof createClassSchema>;
+export type UpdateClassBody = z.infer<typeof updateClassSchema>;
