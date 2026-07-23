@@ -17,9 +17,13 @@ import { CreateGeneratorHomework } from "../../application/create-generator-home
 import { EnqueueHomeworkAdaptation } from "../../application/enqueue-homework-adaptation.js";
 import { GetHomeworkAdaptationStatus } from "../../application/get-homework-adaptation-status.js";
 import { GetHomeworkDetail } from "../../application/get-homework-detail.js";
+import { GetHomeworkVariantPdf } from "../../application/get-homework-variant-pdf.js";
+import { GetFile } from "../../application/get-file.js";
 import { UpdateDraftHomework } from "../../application/update-draft-homework.js";
+import { PrismaFileRepository } from "../persistence/prisma-file-repository.js";
 import { PrismaHomeworkRepository } from "../persistence/prisma-homework-repository.js";
 import { PrismaTeacherRepository } from "../persistence/prisma-teacher-repository.js";
+import { LocalObjectStorage } from "../storage/local-object-storage.js";
 import { BullMqAdaptationJobStatus } from "../queue/bullmq-adaptation-job-status.js";
 import { BullMqAdaptationQueue } from "../queue/bullmq-adaptation-queue.js";
 import { HomeworkController } from "./homework.controller.js";
@@ -71,12 +75,20 @@ const getHomeworkAdaptationStatus = new GetHomeworkAdaptationStatus(
   learningProfileRepository,
   adaptationJobStatus,
 );
+const fileRepository = new PrismaFileRepository(prisma);
+const objectStorage = new LocalObjectStorage();
+const getFile = new GetFile(fileRepository, objectStorage);
+const getHomeworkVariantPdf = new GetHomeworkVariantPdf(
+  homeworkRepository,
+  getFile,
+);
 const homeworkController = new HomeworkController(
   createGeneratorHomework,
   updateDraftHomework,
   getHomeworkDetail,
   enqueueHomeworkAdaptation,
   getHomeworkAdaptationStatus,
+  getHomeworkVariantPdf,
   createDelivery,
 );
 
@@ -92,6 +104,12 @@ homeworkRouter.get(
   "/:id/status-adaptacao",
   authenticate,
   asyncHandler(homeworkController.adaptationStatus),
+);
+
+homeworkRouter.get(
+  "/:id/pdf",
+  authenticate,
+  asyncHandler(homeworkController.pdf),
 );
 
 homeworkRouter.get(

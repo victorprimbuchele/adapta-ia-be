@@ -6,9 +6,11 @@ import type { CreateGeneratorHomework } from "../../application/create-generator
 import type { EnqueueHomeworkAdaptation } from "../../application/enqueue-homework-adaptation.js";
 import type { GetHomeworkAdaptationStatus } from "../../application/get-homework-adaptation-status.js";
 import type { GetHomeworkDetail } from "../../application/get-homework-detail.js";
+import type { GetHomeworkVariantPdf } from "../../application/get-homework-variant-pdf.js";
 import type { UpdateDraftHomework } from "../../application/update-draft-homework.js";
 import { adaptHomeworkSchema } from "./adapt-homework.dto.js";
 import { createHomeworkSchema } from "./create-homework.dto.js";
+import { getHomeworkPdfQuerySchema } from "./get-homework-pdf.dto.js";
 import { updateHomeworkSchema } from "./update-homework.dto.js";
 
 export class HomeworkController {
@@ -18,6 +20,7 @@ export class HomeworkController {
     private readonly getHomeworkDetail: GetHomeworkDetail,
     private readonly enqueueHomeworkAdaptation: EnqueueHomeworkAdaptation,
     private readonly getHomeworkAdaptationStatus: GetHomeworkAdaptationStatus,
+    private readonly getHomeworkVariantPdf: GetHomeworkVariantPdf,
     private readonly createDelivery: CreateDelivery,
   ) {}
 
@@ -93,6 +96,24 @@ export class HomeworkController {
     );
 
     res.status(200).json(result);
+  };
+
+  pdf = async (req: Request, res: Response): Promise<void> => {
+    // Download/preview do PDF adaptado (Épico 6, BE-E6.3).
+    const id = req.params["id"] as string;
+    const { learningProfileId } = getHomeworkPdfQuerySchema.parse(req.query);
+    const { sub: teacherId } = getAuthenticatedUser(req);
+
+    const { file, data, filename } = await this.getHomeworkVariantPdf.execute({
+      homeworkId: id,
+      teacherId,
+      learningProfileId,
+    });
+
+    res.setHeader("Content-Type", file.mimeType);
+    res.setHeader("Content-Length", file.sizeBytes.toString());
+    res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+    res.status(200).send(data);
   };
 
   send = async (req: Request, res: Response): Promise<void> => {
