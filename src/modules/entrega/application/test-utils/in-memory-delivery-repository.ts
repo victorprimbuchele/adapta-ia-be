@@ -33,6 +33,7 @@ export class InMemoryDeliveryRepository implements DeliveryRepository {
       studentId: r.studentId,
       studentName: r.studentName,
       studentEmail: r.studentEmail,
+      emailPayload: r.emailPayload,
       variantHomeworkId: r.variantHomeworkId,
       status: r.status,
       failedReason: r.failedReason,

@@ -3,12 +3,14 @@ import type {
   DeliveryDetail,
   DeliveryRecipientStatus,
   DeliveryStatus,
+  EmailSendingPayload,
 } from "../domain/delivery.js";
 
 export interface CreateRecipientData {
   studentId: string;
   studentName: string;
   studentEmail: string;
+  emailPayload: EmailSendingPayload;
   /** Null quando o perfil do aluno não tinha variante pronta (falha imediata). */
   variantHomeworkId: string | null;
   status: DeliveryRecipientStatus;

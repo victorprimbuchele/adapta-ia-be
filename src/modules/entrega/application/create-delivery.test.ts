@@ -131,6 +131,7 @@ async function buildScenario() {
     deliveryQueue,
     deliveryRepository,
     homeworkRepository,
+    studentRepository,
   };
 }
 
@@ -146,6 +147,57 @@ describe("CreateDelivery", () => {
     });
 
     expect(deliveryQueue.enqueued).toHaveLength(0);
+  });
+
+  it("persiste snapshot de recipient_email e payload mesmo se o e-mail do aluno mudar (BE-E7.4)", async () => {
+    const {
+      generator,
+      variantProfile1,
+      createDelivery,
+      deliveryRepository,
+      homeworkRepository,
+      createdClass,
+      studentWithVariant,
+      studentRepository,
+    } = await buildScenario();
+
+    const variantProfile2 = await homeworkRepository.upsertAdaptation({
+      title: "Frações (P2)",
+      content: "Texto em microtarefas.",
+      glossary: null,
+      homeworkId: generator.id,
+      learningProfileId: "profile-2",
+      classId: createdClass.id,
+      teacherId: "teacher-1",
+    });
+    await homeworkRepository.attachContentFile(variantProfile2.id, "file-pdf-2");
+
+    const result = await createDelivery.execute({ homeworkId: generator.id, teacherId: "teacher-1" });
+    const lucas = result.delivery.recipients.find((r) => r.studentId === studentWithVariant.id)!;
+
+    expect(lucas.studentEmail).toBe("lucas@escola.com");
+    expect(lucas.emailPayload).toEqual({
+      homeworkId: variantProfile1.id,
+      title: "Frações (P1)",
+    });
+
+    await studentRepository.update(studentWithVariant.id, {
+      name: "Lucas Atualizado",
+      email: "lucas.novo@escola.com",
+    });
+    await homeworkRepository.updateDraft(variantProfile1.id, {
+      title: "Título alterado depois",
+      content: "Conteúdo alterado",
+    });
+
+    const persisted = await deliveryRepository.findDetailById(result.delivery.id);
+    const persistedLucas = persisted!.recipients.find((r) => r.studentId === studentWithVariant.id)!;
+
+    expect(persistedLucas.studentEmail).toBe("lucas@escola.com");
+    expect(persistedLucas.emailPayload).toEqual({
+      homeworkId: variantProfile1.id,
+      title: "Frações (P1)",
+    });
   });
 
   it("seleciona a variante do perfil de cada aluno, nunca a geradora (BE-E7.3)", async () => {

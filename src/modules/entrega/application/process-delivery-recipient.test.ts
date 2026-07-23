@@ -52,11 +52,13 @@ async function buildScenario(options?: { withPdf?: boolean }) {
   const delivery = await deliveryRepository.create({
     homeworkId: generator.id,
     teacherId: "teacher-1",
+    status: "agendado",
     recipients: [
       {
         studentId: "student-1",
         studentName: "Lucas",
         studentEmail: "lucas@escola.com",
+        emailPayload: { homeworkId: variant.id, title: variant.title },
         variantHomeworkId: variant.id,
         status: "pendente",
         failedReason: null,
@@ -123,11 +125,13 @@ describe("ProcessDeliveryRecipient", () => {
     const delivery = await deliveryRepository.create({
       homeworkId: baseDelivery.homeworkId,
       teacherId: "teacher-1",
+      status: "agendado",
       recipients: [
         {
           studentId: "student-2",
           studentName: "Ana",
           studentEmail: "ana@escola.com",
+          emailPayload: { homeworkId: "", title: "" },
           variantHomeworkId: null,
           status: "pendente",
           failedReason: null,

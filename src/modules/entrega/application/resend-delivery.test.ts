@@ -11,11 +11,13 @@ describe("ResendDelivery", () => {
     const created = await deliveryRepository.create({
       homeworkId: "homework-1",
       teacherId: "teacher-1",
+      status: "agendado",
       recipients: [
         {
           studentId: "s1",
           studentName: "Lucas",
           studentEmail: "lucas@escola.com",
+          emailPayload: { homeworkId: "variant-1", title: "Variante 1" },
           variantHomeworkId: "variant-1",
           status: "enviado",
           failedReason: null,
@@ -24,6 +26,7 @@ describe("ResendDelivery", () => {
           studentId: "s2",
           studentName: "Ana",
           studentEmail: "ana@escola.com",
+          emailPayload: { homeworkId: "variant-2", title: "Variante 2" },
           variantHomeworkId: "variant-2",
           status: "falhou",
           failedReason: "Falha ao enviar o e-mail.",
@@ -32,6 +35,7 @@ describe("ResendDelivery", () => {
           studentId: "s3",
           studentName: "João",
           studentEmail: "joao@escola.com",
+          emailPayload: { homeworkId: "", title: "" },
           variantHomeworkId: null,
           status: "falhou",
           failedReason: "Adaptação não disponível.",

@@ -9,11 +9,13 @@ describe("GetDeliveryDetail", () => {
     const created = await deliveryRepository.create({
       homeworkId: "homework-1",
       teacherId: "teacher-1",
+      status: "agendado",
       recipients: [
         {
           studentId: "s1",
           studentName: "Lucas",
           studentEmail: "lucas@escola.com",
+          emailPayload: { homeworkId: "variant-1", title: "Atividade adaptada" },
           variantHomeworkId: "variant-1",
           status: "enviado",
           failedReason: null,
@@ -42,6 +44,7 @@ describe("GetDeliveryDetail", () => {
     const created = await deliveryRepository.create({
       homeworkId: "homework-1",
       teacherId: "teacher-1",
+      status: "agendado",
       recipients: [],
     });
 

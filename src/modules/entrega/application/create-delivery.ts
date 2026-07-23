@@ -13,6 +13,7 @@ import {
 import type { CreateRecipientData, DeliveryRepository } from "../ports/delivery-repository.js";
 import type { DeliveryQueuePort } from "../ports/delivery-queue.js";
 import { findMissingDeliveryProfiles } from "./find-missing-delivery-profiles.js";
+import { buildEmailSendingSnapshot } from "./build-email-sending-snapshot.js";
 import {
   indexVariantsByLearningProfileId,
   resolveDeliveryVariantForProfile,
@@ -31,8 +32,9 @@ export interface CreateDeliveryResult {
 /**
  * Cria um envio (`Sending` / `Delivery`, status inicial `agendado`): para
  * cada aluno, seleciona a variante do seu perfil ativo (BE-E7.3) e cria
- * HomeworkSending + EmailSending via `DeliveryRecipient` (BE-E7.2).
- * Bloqueia se faltar variante pronta para algum perfil (BE-E7.1).
+ * HomeworkSending + EmailSending via `DeliveryRecipient` (BE-E7.2), com
+ * snapshot de e-mail e payload (BE-E7.4). Bloqueia se faltar variante
+ * pronta para algum perfil (BE-E7.1).
  */
 export class CreateDelivery {
   constructor(
@@ -90,6 +92,7 @@ export class CreateDelivery {
         studentId: student.id,
         studentName: student.name,
         studentEmail: student.email,
+        emailPayload: buildEmailSendingSnapshot(variant),
         variantHomeworkId: variant.id,
         status: "pendente" as const,
         failedReason: null,
