@@ -1,13 +1,18 @@
 import type { ListClassStudents } from "../../escola/application/list-class-students.js";
+import type { LearningProfileRepository } from "../../escola/ports/learning-profile-repository.js";
 import type { ClassStudentWithProfile } from "../../escola/domain/student.js";
 import type { LearningProfile } from "../../escola/domain/learning-profile.js";
 import { authorizeHomeworkOwner } from "../../material/application/authorize-homework-owner.js";
 import { HomeworkNotGeneratorError } from "../../material/domain/errors.js";
 import type { HomeworkRepository } from "../../material/ports/homework-repository.js";
 import type { DeliveryDetail } from "../domain/delivery.js";
-import { NoRecipientsToDeliverError } from "../domain/errors.js";
+import {
+  IncompleteDeliveryVariantsError,
+  NoRecipientsToDeliverError,
+} from "../domain/errors.js";
 import type { CreateRecipientData, DeliveryRepository } from "../ports/delivery-repository.js";
 import type { DeliveryQueuePort } from "../ports/delivery-queue.js";
+import { findMissingDeliveryProfiles } from "./find-missing-delivery-profiles.js";
 
 export interface CreateDeliveryInput {
   homeworkId: string;
@@ -17,19 +22,18 @@ export interface CreateDeliveryInput {
 export interface CreateDeliveryResult {
   delivery: DeliveryDetail;
   enqueuedCount: number;
-  skippedCount: number;
 }
 
 /**
- * Cria um envio: um destinatário por aluno matriculado na turma com
- * perfil de aprendizagem vinculado, usando a variante adaptada
- * correspondente (Épico 6, BE-E6.1). Alunos cujo perfil não tem variante
- * pronta entram como `falhou` imediatamente (sem job) — visível na tela
- * de status sem travar os que podem ser enviados.
+ * Cria um envio (`Sending` / `Delivery`, status inicial `agendado`): um
+ * destinatário por aluno com perfil na turma, usando a variante do perfil.
+ * Bloqueia se faltar variante pronta para algum perfil presente (Épico 7,
+ * BE-E7.1).
  */
 export class CreateDelivery {
   constructor(
     private readonly homeworkRepository: HomeworkRepository,
+    private readonly learningProfileRepository: LearningProfileRepository,
     private readonly listClassStudents: ListClassStudents,
     private readonly deliveryRepository: DeliveryRepository,
     private readonly deliveryQueue: DeliveryQueuePort,
@@ -60,24 +64,24 @@ export class CreateDelivery {
       throw new NoRecipientsToDeliverError(input.homeworkId);
     }
 
+    const missingProfiles = await findMissingDeliveryProfiles({
+      studentsWithProfile,
+      variants,
+      learningProfileRepository: this.learningProfileRepository,
+    });
+
+    if (missingProfiles.length > 0) {
+      throw new IncompleteDeliveryVariantsError(input.homeworkId, missingProfiles);
+    }
+
     const variantByProfileId = new Map(
-      variants.filter((v) => v.learningProfileId !== null).map((v) => [v.learningProfileId as string, v]),
+      variants
+        .filter((variant) => variant.learningProfileId !== null)
+        .map((variant) => [variant.learningProfileId as string, variant]),
     );
 
     const recipients: CreateRecipientData[] = studentsWithProfile.map((student) => {
-      const profileId = student.learningProfile.id;
-      const variant = variantByProfileId.get(profileId);
-
-      if (!variant) {
-        return {
-          studentId: student.id,
-          studentName: student.name,
-          studentEmail: student.email,
-          variantHomeworkId: null,
-          status: "falhou" as const,
-          failedReason: `Adaptação não disponível para o perfil "${student.learningProfile.name}".`,
-        };
-      }
+      const variant = variantByProfileId.get(student.learningProfile.id)!;
 
       return {
         studentId: student.id,
@@ -92,19 +96,20 @@ export class CreateDelivery {
     const delivery = await this.deliveryRepository.create({
       homeworkId: homework.id,
       teacherId: input.teacherId,
+      status: "agendado",
       recipients,
     });
 
-    const pendingRecipients = delivery.recipients.filter((r) => r.status === "pendente");
-
     await this.deliveryQueue.enqueue(
-      pendingRecipients.map((r) => ({ deliveryId: delivery.id, recipientId: r.id })),
+      delivery.recipients.map((recipient) => ({
+        deliveryId: delivery.id,
+        recipientId: recipient.id,
+      })),
     );
 
     return {
       delivery,
-      enqueuedCount: pendingRecipients.length,
-      skippedCount: recipients.length - pendingRecipients.length,
+      enqueuedCount: delivery.recipients.length,
     };
   }
 }

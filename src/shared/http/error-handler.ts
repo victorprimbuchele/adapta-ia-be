@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
 
 import { AppError } from "../errors/app-error.js";
+import { IncompleteDeliveryVariantsError } from "../../modules/entrega/domain/errors.js";
 
 /**
  * Middleware de erro global do Express. Deve ser registrado por último,
@@ -22,6 +23,17 @@ export function errorHandler(
           path: issue.path.join("."),
           message: issue.message,
         })),
+      },
+    });
+    return;
+  }
+
+  if (err instanceof IncompleteDeliveryVariantsError) {
+    res.status(err.statusCode).json({
+      error: {
+        code: err.code,
+        message: err.message,
+        missingProfiles: err.missingProfiles,
       },
     });
     return;

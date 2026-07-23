@@ -42,6 +42,11 @@ export class NodemailerEmailSender implements EmailSenderPort {
       to: input.to,
       subject: input.subject,
       html: input.html,
+      attachments: input.attachments?.map((attachment) => ({
+        filename: attachment.filename,
+        content: attachment.content,
+        contentType: attachment.contentType,
+      })),
     });
   }
 }

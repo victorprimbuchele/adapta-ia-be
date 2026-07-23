@@ -125,8 +125,8 @@ export class HomeworkController {
 
     res.status(202).json({
       deliveryId: result.delivery.id,
+      status: result.delivery.status,
       enqueuedCount: result.enqueuedCount,
-      skippedCount: result.skippedCount,
     });
   };
 }

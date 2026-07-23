@@ -21,6 +21,7 @@ export class InMemoryDeliveryRepository implements DeliveryRepository {
       id: `delivery-${nextDeliveryId++}`,
       homeworkId: data.homeworkId,
       teacherId: data.teacherId,
+      status: data.status,
       createdAt: now,
       updatedAt: now,
     };

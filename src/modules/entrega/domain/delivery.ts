@@ -3,12 +3,15 @@
  * turma com perfil de aprendizagem vinculado (Épico 6, BE-E6.1).
  * Assíncrono: a API cria o registro e enfileira; o worker envia de fato.
  */
+export type DeliveryStatus = "pendente" | "agendado";
+
 export type DeliveryRecipientStatus = "pendente" | "enviado" | "falhou";
 
 export interface Delivery {
   id: string;
   homeworkId: string;
   teacherId: string;
+  status: DeliveryStatus;
   createdAt: Date;
   updatedAt: Date;
 }

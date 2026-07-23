@@ -1,4 +1,9 @@
-import type { Delivery, DeliveryDetail, DeliveryRecipientStatus } from "../domain/delivery.js";
+import type {
+  Delivery,
+  DeliveryDetail,
+  DeliveryRecipientStatus,
+  DeliveryStatus,
+} from "../domain/delivery.js";
 
 export interface CreateRecipientData {
   studentId: string;
@@ -13,6 +18,7 @@ export interface CreateRecipientData {
 export interface CreateDeliveryData {
   homeworkId: string;
   teacherId: string;
+  status: DeliveryStatus;
   recipients: CreateRecipientData[];
 }
 

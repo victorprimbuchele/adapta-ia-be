@@ -22,8 +22,8 @@ function escapeHtml(value: string): string {
 
 /**
  * Monta o e-mail de entrega da atividade adaptada (Épico 6, BE-E6.2).
- * Sem PDF anexo no MVP (lacuna conhecida — ver docs/API.md §9.4): o
- * conteúdo adaptado vai inline no corpo do e-mail.
+ * O conteúdo adaptado vai inline no corpo do e-mail; o PDF da variante é
+ * anexado separadamente por `ProcessDeliveryRecipient`.
  */
 export function renderDeliveryEmail(input: RenderDeliveryEmailInput): RenderedEmail {
   const subject = `Nova atividade: ${input.homeworkTitle}`;

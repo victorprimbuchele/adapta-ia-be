@@ -50,6 +50,7 @@ const deliveryRepository = new PrismaDeliveryRepository(prisma);
 const deliveryQueue = new BullMqDeliveryQueue();
 const createDelivery = new CreateDelivery(
   homeworkRepository,
+  learningProfileRepository,
   listClassStudents,
   deliveryRepository,
   deliveryQueue,

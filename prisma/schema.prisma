@@ -241,16 +241,23 @@ enum DeliveryRecipientStatus {
   falhou
 }
 
+/// Status agregado do envio (`Sending` — Épico 7, BE-E7.1).
+enum DeliveryStatus {
+  pendente
+  agendado
+}
+
 /// Um "envio" de uma homework geradora — dispara um e-mail por aluno
 /// matriculado na turma com perfil de aprendizagem vinculado, usando a
-/// variante adaptada correspondente (Épico 6, BE-E6.1). Assíncrono: a API
+/// variante adaptada correspondente (Épico 7, BE-E7.1). Assíncrono: a API
 /// só cria o registro e enfileira; o worker envia de fato.
 model Delivery {
-  id         String   @id @default(cuid())
-  homeworkId String   @map("homework_id")
-  teacherId  String   @map("teacher_id")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  id         String         @id @default(cuid())
+  homeworkId String         @map("homework_id")
+  teacherId  String         @map("teacher_id")
+  status     DeliveryStatus @default(agendado)
+  createdAt  DateTime       @default(now()) @map("created_at")
+  updatedAt  DateTime       @updatedAt @map("updated_at")
 
   homework   Homework            @relation(fields: [homeworkId], references: [id])
   teacher    User                @relation(fields: [teacherId], references: [id])

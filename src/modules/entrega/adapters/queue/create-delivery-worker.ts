@@ -2,7 +2,10 @@ import { Worker } from "bullmq";
 
 import { prisma } from "../../../../shared/infra/prisma-client.js";
 import { getRedisConnectionOptions } from "../../../../shared/infra/redis.js";
+import { GetFile } from "../../../material/application/get-file.js";
+import { PrismaFileRepository } from "../../../material/adapters/persistence/prisma-file-repository.js";
 import { PrismaHomeworkRepository } from "../../../material/adapters/persistence/prisma-homework-repository.js";
+import { LocalObjectStorage } from "../../../material/adapters/storage/local-object-storage.js";
 import { DELIVERY_JOB_ATTEMPTS } from "../../application/delivery-job-options.js";
 import { markRecipientFailedOnFinalFailure } from "../../application/mark-recipient-failed-on-final-failure.js";
 import { ProcessDeliveryRecipient } from "../../application/process-delivery-recipient.js";
@@ -71,5 +74,6 @@ function createDefaultProcessor(): ProcessDeliveryRecipient {
     new PrismaDeliveryRepository(prisma),
     new PrismaHomeworkRepository(prisma),
     new NodemailerEmailSender(),
+    new GetFile(new PrismaFileRepository(prisma), new LocalObjectStorage()),
   );
 }
