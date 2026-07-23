@@ -18,6 +18,7 @@ export class PrismaDeliveryRepository implements DeliveryRepository {
       data: {
         homeworkId: data.homeworkId,
         teacherId: data.teacherId,
+        status: data.status,
         recipients: {
           create: data.recipients.map((r) => ({
             studentId: r.studentId,
@@ -64,6 +65,7 @@ interface DeliveryRow {
   id: string;
   homeworkId: string;
   teacherId: string;
+  status: Delivery["status"];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -87,6 +89,7 @@ function toDelivery(row: DeliveryRow): Delivery {
     id: row.id,
     homeworkId: row.homeworkId,
     teacherId: row.teacherId,
+    status: row.status,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };

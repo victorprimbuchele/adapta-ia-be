@@ -33,6 +33,27 @@ export class NoRecipientsToDeliverError extends AppError {
 }
 
 /**
+ * Nem todos os perfis presentes na turma têm variante adaptada pronta
+ * — o envio incompleto é bloqueado (Épico 7, BE-E7.1).
+ */
+export class IncompleteDeliveryVariantsError extends AppError {
+  readonly missingProfiles: ReadonlyArray<{ id: string; name: string }>;
+
+  constructor(
+    homeworkId: string,
+    missingProfiles: ReadonlyArray<{ id: string; name: string }>,
+  ) {
+    const names = missingProfiles.map((profile) => profile.name).join(", ");
+    super(
+      `Não é possível enviar a homework "${homeworkId}": faltam variantes prontas para os perfis: ${names}.`,
+      422,
+      "INCOMPLETE_DELIVERY_VARIANTS",
+    );
+    this.missingProfiles = missingProfiles;
+  }
+}
+
+/**
  * Falha ao enviar o e-mail via SMTP (Épico 6, BE-E6.2). Retriável por
  * padrão — falhas de validação local (ex.: destinatário sem e-mail) usam
  * `retriable: false`.
