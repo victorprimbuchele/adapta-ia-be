@@ -1,5 +1,6 @@
 import type { DeliveryRepository } from "../ports/delivery-repository.js";
 import { DELIVERY_JOB_ATTEMPTS } from "./delivery-job-options.js";
+import { finalizeDeliveryIfComplete } from "./finalize-delivery-if-complete.js";
 import { teacherVisibleDeliveryErrorMessage } from "./teacher-visible-delivery-error.js";
 import type { DeliveryRecipientJob } from "../ports/delivery-queue.js";
 
@@ -34,6 +35,7 @@ export async function markRecipientFailedOnFinalFailure(
       status: "falhou",
       failedReason: teacherVisibleDeliveryErrorMessage(error.cause ?? error),
     });
+    await finalizeDeliveryIfComplete(job.data.deliveryId, deliveryRepository);
   } catch (updateError) {
     console.error(`[worker] failed to mark recipient as failed:`, updateError);
   }

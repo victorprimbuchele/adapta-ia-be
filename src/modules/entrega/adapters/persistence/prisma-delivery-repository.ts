@@ -3,6 +3,7 @@ import type { Delivery, DeliveryDetail, DeliveryRecipient } from "../../domain/d
 import type {
   CreateDeliveryData,
   DeliveryRepository,
+  UpdateDeliveryData,
   UpdateRecipientStatusData,
 } from "../../ports/delivery-repository.js";
 
@@ -60,6 +61,16 @@ export class PrismaDeliveryRepository implements DeliveryRepository {
       },
     });
   }
+
+  async updateDelivery(deliveryId: string, data: UpdateDeliveryData): Promise<void> {
+    await this.prisma.delivery.update({
+      where: { id: deliveryId },
+      data: {
+        status: data.status,
+        ...(data.sentAt !== undefined ? { sentAt: data.sentAt } : {}),
+      },
+    });
+  }
 }
 
 interface DeliveryRow {
@@ -67,6 +78,7 @@ interface DeliveryRow {
   homeworkId: string;
   teacherId: string;
   status: Delivery["status"];
+  sentAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -92,6 +104,7 @@ function toDelivery(row: DeliveryRow): Delivery {
     homeworkId: row.homeworkId,
     teacherId: row.teacherId,
     status: row.status,
+    sentAt: row.sentAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };

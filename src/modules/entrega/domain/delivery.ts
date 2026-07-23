@@ -4,7 +4,7 @@
  * (Épico 7, BE-E7.1 / BE-E7.2). Assíncrono: a API cria os registros e
  * enfileira; o worker envia de fato.
  */
-export type DeliveryStatus = "pendente" | "agendado";
+export type DeliveryStatus = "pendente" | "agendado" | "concluido";
 
 export type DeliveryRecipientStatus = "pendente" | "enviado" | "falhou";
 
@@ -19,6 +19,8 @@ export interface Delivery {
   homeworkId: string;
   teacherId: string;
   status: DeliveryStatus;
+  /** Preenchido quando todos os destinatários terminaram (`Sending.sent_at` — BE-E7.7). */
+  sentAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }

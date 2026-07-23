@@ -30,6 +30,11 @@ export interface UpdateRecipientStatusData {
   sentAt?: Date | null;
 }
 
+export interface UpdateDeliveryData {
+  status: DeliveryStatus;
+  sentAt?: Date | null;
+}
+
 export interface DeliveryRepository {
   /** Cria o envio e todos os destinatários em uma única transação. */
   create(data: CreateDeliveryData): Promise<DeliveryDetail>;
@@ -39,4 +44,6 @@ export interface DeliveryRepository {
   findDetailById(id: string): Promise<DeliveryDetail | null>;
 
   updateRecipientStatus(recipientId: string, data: UpdateRecipientStatusData): Promise<void>;
+
+  updateDelivery(deliveryId: string, data: UpdateDeliveryData): Promise<void>;
 }

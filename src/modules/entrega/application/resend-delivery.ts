@@ -29,6 +29,15 @@ export class ResendDelivery {
       (recipient) => recipient.status === "falhou" && recipient.variantHomeworkId !== null,
     );
 
+    if (failedRecipients.length === 0) {
+      return { requeuedCount: 0 };
+    }
+
+    await this.deliveryRepository.updateDelivery(deliveryId, {
+      status: "agendado",
+      sentAt: null,
+    });
+
     await Promise.all(
       failedRecipients.map((recipient) =>
         this.deliveryRepository.updateRecipientStatus(recipient.id, {

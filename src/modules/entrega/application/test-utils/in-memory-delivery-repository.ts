@@ -2,6 +2,7 @@ import type { Delivery, DeliveryDetail, DeliveryRecipient } from "../../domain/d
 import type {
   CreateDeliveryData,
   DeliveryRepository,
+  UpdateDeliveryData,
   UpdateRecipientStatusData,
 } from "../../ports/delivery-repository.js";
 
@@ -22,6 +23,7 @@ export class InMemoryDeliveryRepository implements DeliveryRepository {
       homeworkId: data.homeworkId,
       teacherId: data.teacherId,
       status: data.status,
+      sentAt: null,
       createdAt: now,
       updatedAt: now,
     };
@@ -67,5 +69,16 @@ export class InMemoryDeliveryRepository implements DeliveryRepository {
         return;
       }
     }
+  }
+
+  async updateDelivery(deliveryId: string, data: UpdateDeliveryData): Promise<void> {
+    const delivery = this.deliveries.find((item) => item.id === deliveryId);
+    if (!delivery) {
+      throw new Error(`Delivery "${deliveryId}" not found in memory repository.`);
+    }
+
+    delivery.status = data.status;
+    if (data.sentAt !== undefined) delivery.sentAt = data.sentAt;
+    delivery.updatedAt = new Date();
   }
 }

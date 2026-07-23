@@ -5,6 +5,7 @@ import type { HomeworkRepository } from "../../material/ports/homework-repositor
 import type { DeliveryRepository } from "../ports/delivery-repository.js";
 import type { EmailAttachment, EmailSenderPort } from "../ports/email-sender.js";
 import { buildDeliveryAudioLink } from "./build-delivery-audio-link.js";
+import { finalizeDeliveryIfComplete } from "./finalize-delivery-if-complete.js";
 import { renderDeliveryEmail } from "./render-delivery-email.js";
 
 export interface ProcessDeliveryRecipientInput {
@@ -83,6 +84,8 @@ export class ProcessDeliveryRecipient {
       sentAt: new Date(),
       failedReason: null,
     });
+
+    await finalizeDeliveryIfComplete(input.deliveryId, this.deliveryRepository);
   }
 
   private async buildPdfAttachment(fileId: string, title: string): Promise<EmailAttachment> {
