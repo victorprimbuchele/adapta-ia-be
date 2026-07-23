@@ -280,6 +280,8 @@ model DeliveryRecipient {
   /// não muda retroativamente se o aluno editar o cadastro depois).
   studentName       String                  @map("student_name")
   studentEmail      String                  @map("student_email")
+  /// Snapshot do conteúdo enviado (`EmailSending.payload` — homework_id + título).
+  emailPayload      Json                    @map("email_payload")
   variantHomeworkId String?                 @map("variant_homework_id")
   status            DeliveryRecipientStatus @default(pendente)
   failedReason      String?                 @map("failed_reason")

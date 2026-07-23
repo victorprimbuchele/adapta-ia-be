@@ -24,6 +24,7 @@ export class PrismaDeliveryRepository implements DeliveryRepository {
             studentId: r.studentId,
             studentName: r.studentName,
             studentEmail: r.studentEmail,
+            emailPayload: r.emailPayload,
             variantHomeworkId: r.variantHomeworkId,
             status: r.status,
             failedReason: r.failedReason,
@@ -76,6 +77,7 @@ interface DeliveryRecipientRow {
   studentId: string;
   studentName: string;
   studentEmail: string;
+  emailPayload: DeliveryRecipient["emailPayload"];
   variantHomeworkId: string | null;
   status: DeliveryRecipient["status"];
   failedReason: string | null;
@@ -106,6 +108,7 @@ function toDeliveryRecipient(row: DeliveryRecipientRow): DeliveryRecipient {
     studentId: row.studentId,
     studentName: row.studentName,
     studentEmail: row.studentEmail,
+    emailPayload: row.emailPayload as DeliveryRecipient["emailPayload"],
     variantHomeworkId: row.variantHomeworkId,
     status: row.status,
     failedReason: row.failedReason,

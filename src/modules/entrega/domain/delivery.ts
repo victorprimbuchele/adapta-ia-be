@@ -8,6 +8,12 @@ export type DeliveryStatus = "pendente" | "agendado";
 
 export type DeliveryRecipientStatus = "pendente" | "enviado" | "falhou";
 
+/** Snapshot do conteúdo enviado por e-mail (`EmailSending.payload` — BE-E7.4). */
+export interface EmailSendingPayload {
+  homeworkId: string;
+  title: string;
+}
+
 export interface Delivery {
   id: string;
   homeworkId: string;
@@ -29,6 +35,8 @@ export interface DeliveryRecipient {
   studentName: string;
   /** Snapshot do e-mail no momento do envio (`EmailSending.recipient_email`). */
   studentEmail: string;
+  /** Snapshot do conteúdo enviado (`EmailSending.payload`). */
+  emailPayload: EmailSendingPayload;
   /** Variante adaptada do perfil do aluno (`HomeworkSending.variant_homework_id`). */
   variantHomeworkId: string | null;
   /** Status do envio de e-mail (`EmailSending.status`). */
