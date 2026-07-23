@@ -15,4 +15,6 @@ const fileController = new FileController(getFile);
 
 export const fileRouter = Router();
 
+fileRouter.get("/:id/publico", asyncHandler(fileController.showPublic));
+
 fileRouter.get("/:id", authenticate, asyncHandler(fileController.show));

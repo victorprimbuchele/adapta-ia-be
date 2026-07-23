@@ -4,6 +4,7 @@ import { buildPdfFilename } from "../../material/application/get-homework-varian
 import type { HomeworkRepository } from "../../material/ports/homework-repository.js";
 import type { DeliveryRepository } from "../ports/delivery-repository.js";
 import type { EmailAttachment, EmailSenderPort } from "../ports/email-sender.js";
+import { buildDeliveryAudioLink } from "./build-delivery-audio-link.js";
 import { renderDeliveryEmail } from "./render-delivery-email.js";
 
 export interface ProcessDeliveryRecipientInput {
@@ -12,10 +13,10 @@ export interface ProcessDeliveryRecipientInput {
 }
 
 /**
- * Processa o envio de um único destinatário (worker — Épico 6, BE-E6.2):
- * carrega a variante adaptada, monta o e-mail com o PDF anexado e envia
- * via SMTP. Atualiza o status do destinatário para `enviado`/`falhou` ao
- * final.
+ * Processa o envio de um único destinatário (worker — Épico 7, BE-E7.5):
+ * carrega a variante adaptada, monta o e-mail com PDF anexado e link de
+ * áudio (quando TTS), e envia via Gmail SMTP. Atualiza o status do
+ * destinatário para `enviado`/`falhou` ao final.
  */
 export class ProcessDeliveryRecipient {
   constructor(
@@ -54,12 +55,14 @@ export class ProcessDeliveryRecipient {
     }
 
     const attachment = await this.buildPdfAttachment(variant.contentFileId, variant.title);
+    const audioUrl = variant.audioFileId ? buildDeliveryAudioLink(variant.audioFileId) : null;
 
     const email = renderDeliveryEmail({
       studentName: recipient.studentName,
       homeworkTitle: variant.title,
       variantContent: variant.content,
       glossary: variant.glossary,
+      audioUrl,
     });
 
     try {
