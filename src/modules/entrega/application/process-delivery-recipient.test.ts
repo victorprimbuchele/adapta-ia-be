@@ -7,8 +7,11 @@ import { InMemoryHomeworkRepository } from "../../material/application/test-util
 import { InMemoryDeliveryRepository } from "./test-utils/in-memory-delivery-repository.js";
 import { InMemoryEmailSender } from "./test-utils/in-memory-email-sender.js";
 
-async function buildScenario(options?: { withPdf?: boolean }) {
+const originalEnv = process.env;
+
+async function buildScenario(options?: { withPdf?: boolean; withAudio?: boolean }) {
   const withPdf = options?.withPdf ?? true;
+  const withAudio = options?.withAudio ?? false;
   const homeworkRepository = new InMemoryHomeworkRepository();
   const deliveryRepository = new InMemoryDeliveryRepository();
   const emailSender = new InMemoryEmailSender();
@@ -49,9 +52,20 @@ async function buildScenario(options?: { withPdf?: boolean }) {
     variant = await homeworkRepository.attachContentFile(variant.id, file.id);
   }
 
+  if (withAudio) {
+    const audioFile = await fileRepository.create({
+      type: "audio",
+      path: `homeworks/${variant.id}/audio.mp3`,
+      mimeType: "audio/mpeg",
+      sizeBytes: 8,
+    });
+    variant = await homeworkRepository.attachAudioFile(variant.id, audioFile.id);
+  }
+
   const delivery = await deliveryRepository.create({
     homeworkId: generator.id,
     teacherId: "teacher-1",
+    status: "agendado",
     recipients: [
       {
         studentId: "student-1",
@@ -68,7 +82,20 @@ async function buildScenario(options?: { withPdf?: boolean }) {
 }
 
 describe("ProcessDeliveryRecipient", () => {
-  it("envia o e-mail e marca o destinatário como enviado", async () => {
+  beforeEach(() => {
+    process.env = {
+      ...originalEnv,
+      APP_PUBLIC_URL: "http://localhost:3000",
+      API_PREFIX: "/api/v1",
+      JWT_SECRET: "test-secret",
+    };
+  });
+
+  afterAll(() => {
+    process.env = originalEnv;
+  });
+
+  it("envia o e-mail via SMTP com PDF anexado (BE-E7.5)", async () => {
     const { processDeliveryRecipient, emailSender, deliveryRepository, delivery } = await buildScenario();
     const recipientId = delivery.recipients[0].id;
 
@@ -88,6 +115,17 @@ describe("ProcessDeliveryRecipient", () => {
     const recipient = detail?.recipients.find((r) => r.id === recipientId);
     expect(recipient?.status).toBe("enviado");
     expect(recipient?.sentAt).not.toBeNull();
+  });
+
+  it("inclui link de áudio no HTML quando a variante tem TTS (BE-E7.5)", async () => {
+    const { processDeliveryRecipient, emailSender, delivery } = await buildScenario({ withAudio: true });
+    const recipientId = delivery.recipients[0].id;
+
+    await processDeliveryRecipient.execute({ deliveryId: delivery.id, recipientId });
+
+    expect(emailSender.sent[0].html).toContain("Ouça a versão em áudio da atividade");
+    expect(emailSender.sent[0].html).toContain("/arquivos/");
+    expect(emailSender.sent[0].html).toContain("/publico");
   });
 
   it("rejeita quando a variante não tem PDF gerado", async () => {
@@ -123,6 +161,7 @@ describe("ProcessDeliveryRecipient", () => {
     const delivery = await deliveryRepository.create({
       homeworkId: baseDelivery.homeworkId,
       teacherId: "teacher-1",
+      status: "agendado",
       recipients: [
         {
           studentId: "student-2",

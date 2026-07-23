@@ -3,8 +3,9 @@ import nodemailer, { type Transporter } from "nodemailer";
 import type { EmailSenderPort, SendEmailInput } from "../../ports/email-sender.js";
 
 /**
- * Adapter SMTP via nodemailer para `EmailSenderPort` (Épico 6, BE-E6.2).
- * Env: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`.
+ * Adapter Gmail SMTP via nodemailer para `EmailSenderPort` (Épico 7, BE-E7.5).
+ * Env: `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, `SMTP_USER`, `SMTP_PASS`,
+ * `SMTP_FROM`.
  */
 export class NodemailerEmailSender implements EmailSenderPort {
   private readonly transporter: Transporter;

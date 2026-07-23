@@ -28,6 +28,20 @@ describe("renderDeliveryEmail", () => {
     expect(email.html).toContain("Parte de um todo.");
   });
 
+  it("inclui link de áudio quando informado (BE-E7.5)", () => {
+    const email = renderDeliveryEmail({
+      studentName: "Lucas",
+      homeworkTitle: "Frações",
+      variantContent: "Texto.",
+      glossary: null,
+      audioUrl: "http://localhost:3000/api/v1/arquivos/file-audio/publico?sig=abc",
+    });
+
+    expect(email.html).toContain("Ouça a versão em áudio da atividade");
+    expect(email.html).toContain("/arquivos/file-audio/publico");
+    expect(email.html).toContain("PDF da atividade está anexado");
+  });
+
   it("escapa HTML no conteúdo para evitar injeção", () => {
     const email = renderDeliveryEmail({
       studentName: "<script>alert(1)</script>",
