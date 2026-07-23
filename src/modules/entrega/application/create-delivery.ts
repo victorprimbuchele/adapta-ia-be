@@ -25,10 +25,10 @@ export interface CreateDeliveryResult {
 }
 
 /**
- * Cria um envio (`Sending` / `Delivery`, status inicial `agendado`): um
- * destinatário por aluno com perfil na turma, usando a variante do perfil.
- * Bloqueia se faltar variante pronta para algum perfil presente (Épico 7,
- * BE-E7.1).
+ * Cria um envio (`Sending` / `Delivery`, status inicial `agendado`): para
+ * cada aluno com perfil na turma, um `HomeworkSending` (variante do perfil)
+ * e um `EmailSending` correspondente via `DeliveryRecipient` (Épico 7,
+ * BE-E7.1 / BE-E7.2). Bloqueia se faltar variante pronta para algum perfil.
  */
 export class CreateDelivery {
   constructor(

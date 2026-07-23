@@ -123,6 +123,7 @@ async function buildScenario() {
   return {
     createdClass,
     generator,
+    variantProfile1,
     studentWithVariant,
     studentWithoutVariant,
     studentWithoutProfile,
@@ -145,6 +146,48 @@ describe("CreateDelivery", () => {
     });
 
     expect(deliveryQueue.enqueued).toHaveLength(0);
+  });
+
+  it("cria um HomeworkSending e um EmailSending por aluno com a variante do perfil (BE-E7.2)", async () => {
+    const {
+      generator,
+      variantProfile1,
+      createDelivery,
+      homeworkRepository,
+      createdClass,
+      studentWithVariant,
+      studentWithoutVariant,
+    } = await buildScenario();
+
+    const variantProfile2 = await homeworkRepository.upsertAdaptation({
+      title: "Frações (P2)",
+      content: "Texto em microtarefas.",
+      glossary: null,
+      homeworkId: generator.id,
+      learningProfileId: "profile-2",
+      classId: createdClass.id,
+      teacherId: "teacher-1",
+    });
+    await homeworkRepository.attachContentFile(variantProfile2.id, "file-pdf-2");
+
+    const result = await createDelivery.execute({ homeworkId: generator.id, teacherId: "teacher-1" });
+
+    expect(result.delivery.recipients).toHaveLength(2);
+
+    const lucas = result.delivery.recipients.find((r) => r.studentId === studentWithVariant.id)!;
+    const ana = result.delivery.recipients.find((r) => r.studentId === studentWithoutVariant.id)!;
+
+    // HomeworkSending: variante do perfil, nunca a geradora
+    expect(lucas.variantHomeworkId).toBe(variantProfile1.id);
+    expect(ana.variantHomeworkId).toBe(variantProfile2.id);
+    expect(lucas.variantHomeworkId).not.toBe(generator.id);
+    expect(ana.variantHomeworkId).not.toBe(generator.id);
+
+    // EmailSending: snapshot do e-mail + status inicial pendente
+    expect(lucas.studentEmail).toBe("lucas@escola.com");
+    expect(ana.studentEmail).toBe("ana@escola.com");
+    expect(lucas.status).toBe("pendente");
+    expect(ana.status).toBe("pendente");
   });
 
   it("cria envio agendado com destinatários pendentes quando todas as variantes estão prontas", async () => {
