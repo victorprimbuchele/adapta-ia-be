@@ -2,6 +2,9 @@ import PDFDocument from "pdfkit";
 
 import type { LearningProfilePrompt } from "../../../escola/domain/learning-profile-prompt.js";
 import type { GlossaryEntry } from "../../domain/glossary.js";
+import {
+  buildVariantPdfContentBlocks,
+} from "../../application/build-variant-pdf-sections.js";
 import { resolvePdfTemplateTheme } from "../../domain/pdf-template-theme.js";
 import type {
   GenerateVariantPdfInput,
@@ -55,26 +58,7 @@ function fontSizes(profilePrompt: LearningProfilePrompt): {
 }
 
 function contentBlocks(content: string, profilePrompt: LearningProfilePrompt): string[] {
-  const theme = resolvePdfTemplateTheme(profilePrompt);
-  const trimmed = content.trim();
-
-  if (theme.layout !== "structured") {
-    return [trimmed];
-  }
-
-  const paragraphs = trimmed
-    .split(/\n{2,}/)
-    .map((block) => block.trim())
-    .filter(Boolean);
-
-  if (paragraphs.length > 1) {
-    return paragraphs;
-  }
-
-  return trimmed
-    .split(/\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
+  return buildVariantPdfContentBlocks(content, profilePrompt);
 }
 
 function renderPdfDocument(
