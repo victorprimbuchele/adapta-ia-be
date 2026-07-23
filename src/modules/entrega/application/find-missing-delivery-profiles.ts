@@ -6,6 +6,7 @@ import type { ClassStudentWithProfile } from "../../escola/domain/student.js";
 import type { LearningProfile } from "../../escola/domain/learning-profile.js";
 import { isVariantAdaptationComplete } from "../../material/application/is-variant-adaptation-complete.js";
 import type { Homework } from "../../material/domain/homework.js";
+import { indexVariantsByLearningProfileId } from "./resolve-delivery-variant-for-profile.js";
 
 export interface MissingDeliveryProfile {
   id: string;
@@ -32,11 +33,7 @@ export async function findMissingDeliveryProfiles(input: {
     );
   }
 
-  const variantByProfileId = new Map(
-    input.variants
-      .filter((variant) => variant.learningProfileId !== null)
-      .map((variant) => [variant.learningProfileId as string, variant]),
-  );
+  const variantByProfileId = indexVariantsByLearningProfileId(input.variants);
 
   const missing: MissingDeliveryProfile[] = [];
 

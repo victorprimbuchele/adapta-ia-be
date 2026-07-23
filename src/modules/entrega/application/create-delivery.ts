@@ -13,6 +13,10 @@ import {
 import type { CreateRecipientData, DeliveryRepository } from "../ports/delivery-repository.js";
 import type { DeliveryQueuePort } from "../ports/delivery-queue.js";
 import { findMissingDeliveryProfiles } from "./find-missing-delivery-profiles.js";
+import {
+  indexVariantsByLearningProfileId,
+  resolveDeliveryVariantForProfile,
+} from "./resolve-delivery-variant-for-profile.js";
 
 export interface CreateDeliveryInput {
   homeworkId: string;
@@ -25,10 +29,10 @@ export interface CreateDeliveryResult {
 }
 
 /**
- * Cria um envio (`Sending` / `Delivery`, status inicial `agendado`): um
- * destinatário por aluno com perfil na turma, usando a variante do perfil.
- * Bloqueia se faltar variante pronta para algum perfil presente (Épico 7,
- * BE-E7.1).
+ * Cria um envio (`Sending` / `Delivery`, status inicial `agendado`): para
+ * cada aluno, seleciona a variante do seu perfil ativo (BE-E7.3) e cria
+ * HomeworkSending + EmailSending via `DeliveryRecipient` (BE-E7.2).
+ * Bloqueia se faltar variante pronta para algum perfil (BE-E7.1).
  */
 export class CreateDelivery {
   constructor(
@@ -74,14 +78,13 @@ export class CreateDelivery {
       throw new IncompleteDeliveryVariantsError(input.homeworkId, missingProfiles);
     }
 
-    const variantByProfileId = new Map(
-      variants
-        .filter((variant) => variant.learningProfileId !== null)
-        .map((variant) => [variant.learningProfileId as string, variant]),
-    );
+    const variantsByProfileId = indexVariantsByLearningProfileId(variants);
 
     const recipients: CreateRecipientData[] = studentsWithProfile.map((student) => {
-      const variant = variantByProfileId.get(student.learningProfile.id)!;
+      const variant = resolveDeliveryVariantForProfile(
+        student.learningProfile.id,
+        variantsByProfileId,
+      )!;
 
       return {
         studentId: student.id,

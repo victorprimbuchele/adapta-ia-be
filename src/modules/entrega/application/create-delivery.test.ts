@@ -123,6 +123,7 @@ async function buildScenario() {
   return {
     createdClass,
     generator,
+    variantProfile1,
     studentWithVariant,
     studentWithoutVariant,
     studentWithoutProfile,
@@ -145,6 +146,39 @@ describe("CreateDelivery", () => {
     });
 
     expect(deliveryQueue.enqueued).toHaveLength(0);
+  });
+
+  it("seleciona a variante do perfil de cada aluno, nunca a geradora (BE-E7.3)", async () => {
+    const {
+      generator,
+      variantProfile1,
+      createDelivery,
+      homeworkRepository,
+      createdClass,
+      studentWithVariant,
+      studentWithoutVariant,
+    } = await buildScenario();
+
+    const variantProfile2 = await homeworkRepository.upsertAdaptation({
+      title: "Frações (P2)",
+      content: "Texto em microtarefas.",
+      glossary: null,
+      homeworkId: generator.id,
+      learningProfileId: "profile-2",
+      classId: createdClass.id,
+      teacherId: "teacher-1",
+    });
+    await homeworkRepository.attachContentFile(variantProfile2.id, "file-pdf-2");
+
+    const result = await createDelivery.execute({ homeworkId: generator.id, teacherId: "teacher-1" });
+
+    const lucas = result.delivery.recipients.find((r) => r.studentId === studentWithVariant.id)!;
+    const ana = result.delivery.recipients.find((r) => r.studentId === studentWithoutVariant.id)!;
+
+    expect(lucas.variantHomeworkId).toBe(variantProfile1.id);
+    expect(ana.variantHomeworkId).toBe(variantProfile2.id);
+    expect(lucas.variantHomeworkId).not.toBe(generator.id);
+    expect(ana.variantHomeworkId).not.toBe(generator.id);
   });
 
   it("cria envio agendado com destinatários pendentes quando todas as variantes estão prontas", async () => {
