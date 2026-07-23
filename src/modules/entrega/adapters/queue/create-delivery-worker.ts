@@ -16,11 +16,11 @@ import { NodemailerEmailSender } from "../email/nodemailer-email-sender.js";
 import { PrismaDeliveryRepository } from "../persistence/prisma-delivery-repository.js";
 
 /**
- * Cria o worker BullMQ que consome `homework-delivery` (Épico 6, BE-E6.2
- * — espelha `createHomeworkAdaptationWorker`). Falhas retriáveis (SMTP)
- * usam backoff; permanentes viram `UnrecoverableError`. Em falha
- * definitiva, o destinatário é marcado `falhou` com motivo visível ao
- * professor.
+ * Cria o worker BullMQ que consome `homework-delivery` (Épico 7, BE-E7.6 /
+ * BE-E7.8). Um job por destinatário — falha individual não trava o lote.
+ * Falhas retriáveis (SMTP) usam backoff; permanentes viram
+ * `UnrecoverableError`. Em falha definitiva, o destinatário é marcado
+ * `falhou` com motivo visível ao professor.
  */
 export function createDeliveryWorker(
   processDeliveryRecipient: ProcessDeliveryRecipient = createDefaultProcessor(),

@@ -1,32 +1,39 @@
+import { UnrecoverableError } from "bullmq";
+
 import type { DeliveryRepository } from "../ports/delivery-repository.js";
 import { DELIVERY_JOB_ATTEMPTS } from "./delivery-job-options.js";
 import { finalizeDeliveryIfComplete } from "./finalize-delivery-if-complete.js";
 import { teacherVisibleDeliveryErrorMessage } from "./teacher-visible-delivery-error.js";
 import type { DeliveryRecipientJob } from "../ports/delivery-queue.js";
 
-/**
- * Marca o destinatário como `falhou` apenas na falha persistente (última
- * tentativa esgotada) — BE-E6.2, espelha
- * `releaseAdaptationIdempotencyOnFinalFailure`. Durante retries com
- * backoff o destinatário permanece `pendente`.
- */
-export async function markRecipientFailedOnFinalFailure(
-  job:
-    | {
-        data: DeliveryRecipientJob;
-        attemptsMade: number;
-        opts: { attempts?: number };
-      }
-    | undefined,
-  error: Error,
-  deliveryRepository: DeliveryRepository,
-): Promise<void> {
-  if (!job) {
-    return;
+type FailedDeliveryJob = {
+  data: DeliveryRecipientJob;
+  attemptsMade: number;
+  opts: { attempts?: number };
+};
+
+/** Falha definitiva: sem retry (`UnrecoverableError`) ou tentativas esgotadas. */
+export function isFinalDeliveryJobFailure(job: FailedDeliveryJob, error: Error): boolean {
+  if (error instanceof UnrecoverableError) {
+    return true;
   }
 
   const maxAttempts = job.opts.attempts ?? DELIVERY_JOB_ATTEMPTS;
-  if (job.attemptsMade < maxAttempts) {
+  return job.attemptsMade >= maxAttempts;
+}
+
+/**
+ * Marca o `EmailSending` como `falhou` na falha definitiva do job individual
+ * (Épico 7, BE-E7.8). Erros permanentes (ex.: e-mail inválido) não retentam;
+ * falhas transitórias (SMTP) permanecem `pendente` até esgotar backoff.
+ * Cada job é independente — a falha de um destinatário não trava o lote.
+ */
+export async function markRecipientFailedOnFinalFailure(
+  job: FailedDeliveryJob | undefined,
+  error: Error,
+  deliveryRepository: DeliveryRepository,
+): Promise<void> {
+  if (!job || !isFinalDeliveryJobFailure(job, error)) {
     return;
   }
 
