@@ -245,6 +245,7 @@ enum DeliveryRecipientStatus {
 enum DeliveryStatus {
   pendente
   agendado
+  concluido
 }
 
 /// Um "envio" de uma homework geradora — dispara um e-mail por aluno
@@ -256,6 +257,7 @@ model Delivery {
   homeworkId String         @map("homework_id")
   teacherId  String         @map("teacher_id")
   status     DeliveryStatus @default(agendado)
+  sentAt     DateTime?      @map("sent_at")
   createdAt  DateTime       @default(now()) @map("created_at")
   updatedAt  DateTime       @updatedAt @map("updated_at")
 

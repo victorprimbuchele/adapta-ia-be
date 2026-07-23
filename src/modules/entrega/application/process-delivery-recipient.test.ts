@@ -116,6 +116,8 @@ describe("ProcessDeliveryRecipient", () => {
     const recipient = detail?.recipients.find((r) => r.id === recipientId);
     expect(recipient?.status).toBe("enviado");
     expect(recipient?.sentAt).not.toBeNull();
+    expect(detail?.status).toBe("concluido");
+    expect(detail?.sentAt).not.toBeNull();
   });
 
   it("inclui link de áudio no HTML quando a variante tem TTS (BE-E7.5)", async () => {
