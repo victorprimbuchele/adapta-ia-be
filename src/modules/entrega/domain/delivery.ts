@@ -52,3 +52,15 @@ export interface DeliveryRecipient {
 export interface DeliveryDetail extends Delivery {
   recipients: DeliveryRecipient[];
 }
+
+/** Contagem agregada por status de destinatário (Épico 7, BE-E7.9). */
+export interface DeliverySummary {
+  total: number;
+  enviado: number;
+  falhou: number;
+  pendente: number;
+}
+
+export interface DeliveryDetailView extends DeliveryDetail {
+  summary: DeliverySummary;
+}
