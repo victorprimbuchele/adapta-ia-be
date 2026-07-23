@@ -13,6 +13,7 @@ import { InMemoryFileRepository } from "./test-utils/in-memory-file-repository.j
 import { InMemoryHomeworkRepository } from "./test-utils/in-memory-homework-repository.js";
 import { InMemoryObjectStorage } from "./test-utils/in-memory-object-storage.js";
 import { InMemoryTextSimplifier } from "./test-utils/in-memory-text-simplifier.js";
+import { PdfKitVariantPdfGenerator } from "../adapters/pdf/pdfkit-variant-pdf-generator.js";
 
 /**
  * BE-E5.11 — glossário e áudio só existem em variantes, nunca na geradora.
@@ -53,6 +54,7 @@ describe("invariante: glossário/áudio só em variantes (BE-E5.11)", () => {
       learningProfileRepository,
       textSimplifier,
       audioGenerator,
+      new PdfKitVariantPdfGenerator(),
       objectStorage,
       fileRepository,
     );

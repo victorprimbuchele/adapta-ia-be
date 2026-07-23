@@ -227,6 +227,7 @@ describe("GetHomeworkAdaptationStatus", () => {
       teacherId: "teacher-1",
     });
     await homeworkRepository.attachAudioFile(variant.id, "file-audio-1");
+    await homeworkRepository.attachContentFile(variant.id, "file-pdf-1");
 
     const result = await getHomeworkAdaptationStatus.execute(
       generator.id,

@@ -16,6 +16,7 @@ import { InMemoryHomeworkRepository } from "./test-utils/in-memory-homework-repo
 import { InMemoryObjectStorage } from "./test-utils/in-memory-object-storage.js";
 import { InMemoryTeacherRepository } from "./test-utils/in-memory-teacher-repository.js";
 import { InMemoryTextSimplifier } from "./test-utils/in-memory-text-simplifier.js";
+import { PdfKitVariantPdfGenerator } from "../adapters/pdf/pdfkit-variant-pdf-generator.js";
 
 /**
  * BE-E4.7 — atividade geradora nunca tem `learning_profile_id` preenchido.
@@ -103,6 +104,7 @@ describe("invariante: geradora sem learning_profile_id (BE-E4.7)", () => {
       learningProfileRepository,
       new InMemoryTextSimplifier(),
       new InMemoryAudioGenerator(),
+      new PdfKitVariantPdfGenerator(),
       new InMemoryObjectStorage(),
       new InMemoryFileRepository(),
     );

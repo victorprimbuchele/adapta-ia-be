@@ -21,5 +21,9 @@ export function isVariantAdaptationComplete(
     return false;
   }
 
+  if (variant.contentFileId === null) {
+    return false;
+  }
+
   return true;
 }

@@ -1,8 +1,7 @@
 /**
- * Arquivo persistido em storage (Épico 5, BE-E5.7).
- * No MVP o tipo suportado é áudio TTS das variantes.
+ * Arquivo persistido em storage (Épico 5, BE-E5.7; PDF — Épico 6, BE-E6.2).
  */
-export type FileType = "audio";
+export type FileType = "audio" | "pdf";
 
 export interface StoredFile {
   id: string;

@@ -69,4 +69,10 @@ export interface HomeworkRepository {
    * Épico 5, BE-E5.7.
    */
   attachAudioFile(homeworkId: string, audioFileId: string): Promise<Homework>;
+
+  /**
+   * Vincula a variante ao registro `File` de PDF (`contentFileId`) —
+   * Épico 6, BE-E6.2.
+   */
+  attachContentFile(homeworkId: string, contentFileId: string): Promise<Homework>;
 }
