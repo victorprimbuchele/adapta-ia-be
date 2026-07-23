@@ -74,5 +74,9 @@ export interface HomeworkRepository {
    * Vincula a variante ao registro `File` de PDF (`contentFileId`) —
    * Épico 6, BE-E6.2.
    */
-  attachContentFile(homeworkId: string, contentFileId: string): Promise<Homework>;
+  /**
+   * Marca a homework geradora como enviada (`isDraft = false`) após o
+   * professor disparar a distribuição (Épico 7).
+   */
+  publishGenerator(id: string): Promise<Homework>;
 }

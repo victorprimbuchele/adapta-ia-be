@@ -1,6 +1,7 @@
 import { UnrecoverableError } from "bullmq";
 
 import type { DeliveryRepository } from "../ports/delivery-repository.js";
+import type { HomeworkRepository } from "../../material/ports/homework-repository.js";
 import { DELIVERY_JOB_ATTEMPTS } from "./delivery-job-options.js";
 import { finalizeDeliveryIfComplete } from "./finalize-delivery-if-complete.js";
 import { teacherVisibleDeliveryErrorMessage } from "./teacher-visible-delivery-error.js";
@@ -32,6 +33,7 @@ export async function markRecipientFailedOnFinalFailure(
   job: FailedDeliveryJob | undefined,
   error: Error,
   deliveryRepository: DeliveryRepository,
+  homeworkRepository?: HomeworkRepository,
 ): Promise<void> {
   if (!job || !isFinalDeliveryJobFailure(job, error)) {
     return;
@@ -42,7 +44,9 @@ export async function markRecipientFailedOnFinalFailure(
       status: "falhou",
       failedReason: teacherVisibleDeliveryErrorMessage(error.cause ?? error),
     });
-    await finalizeDeliveryIfComplete(job.data.deliveryId, deliveryRepository);
+    await finalizeDeliveryIfComplete(job.data.deliveryId, deliveryRepository, {
+      homeworkRepository,
+    });
   } catch (updateError) {
     console.error(`[worker] failed to mark recipient as failed:`, updateError);
   }

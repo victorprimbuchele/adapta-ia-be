@@ -161,6 +161,15 @@ export class PrismaHomeworkRepository implements HomeworkRepository {
 
     return toDomain(row);
   }
+
+  async publishGenerator(id: string): Promise<Homework> {
+    const row = await this.prisma.homework.update({
+      where: { id },
+      data: { isDraft: false },
+    });
+
+    return toDomain(row);
+  }
 }
 
 function toDomain(row: HomeworkRow): Homework {

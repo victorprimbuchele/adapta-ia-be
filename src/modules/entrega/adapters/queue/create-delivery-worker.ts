@@ -25,6 +25,7 @@ import { PrismaDeliveryRepository } from "../persistence/prisma-delivery-reposit
 export function createDeliveryWorker(
   processDeliveryRecipient: ProcessDeliveryRecipient = createDefaultProcessor(),
   deliveryRepository = new PrismaDeliveryRepository(prisma),
+  homeworkRepository = new PrismaHomeworkRepository(prisma),
 ): Worker<DeliveryRecipientJob> {
   const worker = new Worker<DeliveryRecipientJob>(
     HOMEWORK_DELIVERY_QUEUE,
@@ -59,7 +60,7 @@ export function createDeliveryWorker(
       error.message,
     );
 
-    void markRecipientFailedOnFinalFailure(job, error, deliveryRepository);
+    void markRecipientFailedOnFinalFailure(job, error, deliveryRepository, homeworkRepository);
   });
 
   worker.on("completed", (job) => {

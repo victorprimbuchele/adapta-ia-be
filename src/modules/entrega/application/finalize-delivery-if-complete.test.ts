@@ -4,6 +4,7 @@ import {
 } from "./finalize-delivery-if-complete.js";
 import type { DeliveryRecipient } from "../domain/delivery.js";
 import { InMemoryDeliveryRepository } from "./test-utils/in-memory-delivery-repository.js";
+import { InMemoryHomeworkRepository } from "../../material/application/test-utils/in-memory-homework-repository.js";
 
 function recipient(
   id: string,
@@ -94,11 +95,47 @@ describe("finalizeDeliveryIfComplete (BE-E7.7)", () => {
 
     expect(isDeliveryBatchComplete(created.recipients)).toBe(true);
 
-    await finalizeDeliveryIfComplete(created.id, deliveryRepository, completedAt);
+    await finalizeDeliveryIfComplete(created.id, deliveryRepository, {
+      completedAt,
+    });
 
     const detail = await deliveryRepository.findDetailById(created.id);
     expect(detail?.status).toBe("concluido");
     expect(detail?.sentAt).toEqual(completedAt);
+  });
+
+  it("publica a geradora quando o lote termina e homeworkRepository é informado", async () => {
+    const deliveryRepository = new InMemoryDeliveryRepository();
+    const homeworkRepository = new InMemoryHomeworkRepository();
+    const generator = await homeworkRepository.createGenerator({
+      title: "Frações",
+      content: "Conteúdo",
+      classId: "class-1",
+      teacherId: "teacher-1",
+    });
+    const created = await deliveryRepository.create({
+      homeworkId: generator.id,
+      teacherId: "teacher-1",
+      status: "agendado",
+      recipients: [
+        {
+          studentId: "s1",
+          studentName: "Lucas",
+          studentEmail: "lucas@escola.com",
+          emailPayload: { homeworkId: "variant-1", title: "Atividade" },
+          variantHomeworkId: "variant-1",
+          status: "enviado",
+          failedReason: null,
+        },
+      ],
+    });
+
+    await finalizeDeliveryIfComplete(created.id, deliveryRepository, {
+      homeworkRepository,
+    });
+
+    const updated = await homeworkRepository.findById(generator.id);
+    expect(updated?.isDraft).toBe(false);
   });
 
   it("considera lote completo com enviado e falhou", () => {

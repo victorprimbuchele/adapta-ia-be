@@ -106,6 +106,8 @@ export class CreateDelivery {
       recipients,
     });
 
+    await this.homeworkRepository.publishGenerator(homework.id);
+
     await this.deliveryQueue.enqueue(
       delivery.recipients.map((recipient) => ({
         deliveryId: delivery.id,
