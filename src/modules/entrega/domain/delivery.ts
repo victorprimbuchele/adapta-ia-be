@@ -1,7 +1,8 @@
 /**
- * Envio de uma homework geradora — um e-mail por aluno matriculado na
- * turma com perfil de aprendizagem vinculado (Épico 6, BE-E6.1).
- * Assíncrono: a API cria o registro e enfileira; o worker envia de fato.
+ * Envio de uma homework geradora (`Sending` / `Delivery`) — um par
+ * HomeworkSending + EmailSending por aluno matriculado na turma com perfil
+ * (Épico 7, BE-E7.1 / BE-E7.2). Assíncrono: a API cria os registros e
+ * enfileira; o worker envia de fato.
  */
 export type DeliveryStatus = "pendente" | "agendado";
 
@@ -16,14 +17,21 @@ export interface Delivery {
   updatedAt: Date;
 }
 
+/**
+ * Destinatário individual — materializa **HomeworkSending** (variante do perfil)
+ * e **EmailSending** (snapshot de e-mail + status de envio) no mesmo registro
+ * (`delivery_recipients`), um por aluno (Épico 7, BE-E7.2).
+ */
 export interface DeliveryRecipient {
   id: string;
   deliveryId: string;
   studentId: string;
   studentName: string;
+  /** Snapshot do e-mail no momento do envio (`EmailSending.recipient_email`). */
   studentEmail: string;
-  /** Null quando o perfil do aluno não tinha variante adaptada pronta. */
+  /** Variante adaptada do perfil do aluno (`HomeworkSending.variant_homework_id`). */
   variantHomeworkId: string | null;
+  /** Status do envio de e-mail (`EmailSending.status`). */
   status: DeliveryRecipientStatus;
   failedReason: string | null;
   sentAt: Date | null;
