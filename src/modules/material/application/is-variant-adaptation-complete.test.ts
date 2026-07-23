@@ -31,6 +31,7 @@ const baseVariant = (overrides: Partial<Homework> = {}): Homework => ({
   homeworkId: "generator-1",
   learningProfileId: "profile-1",
   audioFileId: null,
+  contentFileId: null,
   classId: "class-1",
   teacherId: "teacher-1",
   createdAt: new Date(),
@@ -39,10 +40,19 @@ const baseVariant = (overrides: Partial<Homework> = {}): Homework => ({
 });
 
 describe("isVariantAdaptationComplete", () => {
-  it("considera completa quando não pede glossário nem TTS", () => {
+  it("considera completa quando não pede glossário nem TTS e tem PDF", () => {
     expect(
-      isVariantAdaptationComplete(baseVariant(), basePrompt({})),
+      isVariantAdaptationComplete(
+        baseVariant({ contentFileId: "file-pdf" }),
+        basePrompt({}),
+      ),
     ).toBe(true);
+  });
+
+  it("exige contentFileId (PDF) em toda variante", () => {
+    expect(
+      isVariantAdaptationComplete(baseVariant({ contentFileId: null }), basePrompt({})),
+    ).toBe(false);
   });
 
   it("exige glossário quando o perfil pede", () => {
@@ -58,6 +68,13 @@ describe("isVariantAdaptationComplete", () => {
         baseVariant({ glossary: [] }),
         basePrompt({ glossary: true }),
       ),
+    ).toBe(false);
+
+    expect(
+      isVariantAdaptationComplete(
+        baseVariant({ glossary: [], contentFileId: "file-pdf" }),
+        basePrompt({ glossary: true }),
+      ),
     ).toBe(true);
   });
 
@@ -71,7 +88,7 @@ describe("isVariantAdaptationComplete", () => {
 
     expect(
       isVariantAdaptationComplete(
-        baseVariant({ audioFileId: "file-1" }),
+        baseVariant({ audioFileId: "file-1", contentFileId: "file-pdf" }),
         basePrompt({ tts: true }),
       ),
     ).toBe(true);

@@ -32,7 +32,7 @@ export class PrismaFileRepository implements FileRepository {
 
 function toDomain(row: {
   id: string;
-  type: "audio";
+  type: "audio" | "pdf";
   path: string;
   mimeType: string;
   sizeBytes: number;

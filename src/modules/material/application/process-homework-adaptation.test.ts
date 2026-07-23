@@ -9,6 +9,7 @@ import {
 } from "../domain/errors.js";
 import { buildVariantSpeechText } from "./build-variant-speech-text.js";
 import { ProcessHomeworkAdaptation } from "./process-homework-adaptation.js";
+import { PdfKitVariantPdfGenerator } from "../adapters/pdf/pdfkit-variant-pdf-generator.js";
 import { InMemoryAudioGenerator } from "./test-utils/in-memory-audio-generator.js";
 import { InMemoryFileRepository } from "./test-utils/in-memory-file-repository.js";
 import { InMemoryHomeworkRepository } from "./test-utils/in-memory-homework-repository.js";
@@ -69,6 +70,7 @@ async function buildScenario(overrides?: { profile?: LearningProfile }) {
   ]);
   const textSimplifier = new InMemoryTextSimplifier();
   const audioGenerator = new InMemoryAudioGenerator();
+  const pdfGenerator = new PdfKitVariantPdfGenerator();
   const objectStorage = new InMemoryObjectStorage();
   const fileRepository = new InMemoryFileRepository();
   const processHomeworkAdaptation = new ProcessHomeworkAdaptation(
@@ -76,6 +78,7 @@ async function buildScenario(overrides?: { profile?: LearningProfile }) {
     learningProfileRepository,
     textSimplifier,
     audioGenerator,
+    pdfGenerator,
     objectStorage,
     fileRepository,
   );
@@ -189,11 +192,15 @@ describe("ProcessHomeworkAdaptation", () => {
     });
 
     expect(variant.audioFileId).not.toBeNull();
-    expect(objectStorage.calls).toHaveLength(1);
+    expect(objectStorage.calls).toHaveLength(2);
     expect(objectStorage.calls[0]).toMatchObject({
       key: `homeworks/${variant.id}/audio.mp3`,
       data: audioGenerator.result.data,
       mimeType: "audio/mpeg",
+    });
+    expect(objectStorage.calls[1]).toMatchObject({
+      key: `homeworks/${variant.id}/content.pdf`,
+      mimeType: "application/pdf",
     });
 
     const file = await fileRepository.findById(variant.audioFileId!);
@@ -208,7 +215,7 @@ describe("ProcessHomeworkAdaptation", () => {
     logSpy.mockRestore();
   });
 
-  it("não chama TTS nem storage quando o perfil não pede áudio", async () => {
+  it("não chama TTS quando o perfil não pede áudio, mas gera PDF (BE-E6.2)", async () => {
     const {
       generator,
       audioGenerator,
@@ -218,7 +225,7 @@ describe("ProcessHomeworkAdaptation", () => {
     } = await buildScenario({ profile: PROFILE_P2 });
     const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
 
-    const { homework: variant, audio } =
+    const { homework: variant, audio, pdf } =
       await processHomeworkAdaptation.execute({
         homeworkId: generator.id,
         learningProfileId: PROFILE_P2.id,
@@ -228,8 +235,43 @@ describe("ProcessHomeworkAdaptation", () => {
     expect(audio).toBeNull();
     expect(variant.audioFileId).toBeNull();
     expect(audioGenerator.calls).toHaveLength(0);
-    expect(objectStorage.calls).toHaveLength(0);
-    expect(fileRepository.files).toHaveLength(0);
+    expect(variant.contentFileId).not.toBeNull();
+    expect(pdf.mimeType).toBe("application/pdf");
+    expect(objectStorage.calls).toHaveLength(1);
+    expect(objectStorage.calls[0]?.key).toMatch(/content\.pdf$/);
+    expect(fileRepository.files).toHaveLength(1);
+    expect(fileRepository.files[0]?.type).toBe("pdf");
+
+    logSpy.mockRestore();
+  });
+
+  it("faz upload do PDF e vincula contentFileId a File tipo pdf (BE-E6.2)", async () => {
+    const {
+      generator,
+      objectStorage,
+      fileRepository,
+      processHomeworkAdaptation,
+    } = await buildScenario();
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+
+    const { homework: variant, pdf } = await processHomeworkAdaptation.execute({
+      homeworkId: generator.id,
+      learningProfileId: PROFILE_P1.id,
+      teacherId: "teacher-1",
+    });
+
+    expect(variant.contentFileId).not.toBeNull();
+    expect(objectStorage.calls.some((call) => call.key.endsWith("content.pdf"))).toBe(
+      true,
+    );
+
+    const file = await fileRepository.findById(variant.contentFileId!);
+    expect(file).toMatchObject({
+      id: variant.contentFileId,
+      type: "pdf",
+      mimeType: "application/pdf",
+      sizeBytes: pdf.data.length,
+    });
 
     logSpy.mockRestore();
   });
@@ -398,6 +440,7 @@ describe("ProcessHomeworkAdaptation", () => {
       homeworkId: generator.id,
       learningProfileId: PROFILE_P1.id,
       audioFileId: null,
+      contentFileId: null,
       classId: "class-1",
       teacherId: "teacher-1",
       createdAt: now,

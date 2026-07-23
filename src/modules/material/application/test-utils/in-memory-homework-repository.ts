@@ -28,6 +28,7 @@ export class InMemoryHomeworkRepository implements HomeworkRepository {
       homeworkId: null,
       learningProfileId: null,
       audioFileId: null,
+      contentFileId: null,
       classId: data.classId,
       teacherId: data.teacherId,
       createdAt: now,
@@ -108,6 +109,7 @@ export class InMemoryHomeworkRepository implements HomeworkRepository {
       homeworkId: data.homeworkId,
       learningProfileId: data.learningProfileId,
       audioFileId: null,
+      contentFileId: null,
       classId: data.classId,
       teacherId: data.teacherId,
       createdAt: now,
@@ -129,6 +131,21 @@ export class InMemoryHomeworkRepository implements HomeworkRepository {
     }
 
     homework.audioFileId = audioFileId;
+    homework.updatedAt = new Date();
+    return homework;
+  }
+
+  async attachContentFile(
+    homeworkId: string,
+    contentFileId: string,
+  ): Promise<Homework> {
+    const homework = this.homeworks.find((item) => item.id === homeworkId);
+
+    if (!homework) {
+      throw new Error(`Homework "${homeworkId}" not found in memory repository.`);
+    }
+
+    homework.contentFileId = contentFileId;
     homework.updatedAt = new Date();
     return homework;
   }

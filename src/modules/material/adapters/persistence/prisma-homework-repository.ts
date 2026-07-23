@@ -20,6 +20,7 @@ type HomeworkRow = {
   homeworkId: string | null;
   learningProfileId: string | null;
   audioFileId: string | null;
+  contentFileId: string | null;
   classId: string;
   teacherId: string;
   createdAt: Date;
@@ -46,6 +47,7 @@ export class PrismaHomeworkRepository implements HomeworkRepository {
         homeworkId: null,
         learningProfileId: null,
         audioFileId: null,
+        contentFileId: null,
         glossary: Prisma.DbNull,
       },
     });
@@ -147,6 +149,18 @@ export class PrismaHomeworkRepository implements HomeworkRepository {
 
     return toDomain(row);
   }
+
+  async attachContentFile(
+    homeworkId: string,
+    contentFileId: string,
+  ): Promise<Homework> {
+    const row = await this.prisma.homework.update({
+      where: { id: homeworkId },
+      data: { contentFileId },
+    });
+
+    return toDomain(row);
+  }
 }
 
 function toDomain(row: HomeworkRow): Homework {
@@ -161,6 +175,7 @@ function toDomain(row: HomeworkRow): Homework {
     homeworkId: row.homeworkId,
     learningProfileId: row.learningProfileId,
     audioFileId: row.audioFileId,
+    contentFileId: row.contentFileId,
     classId: row.classId,
     teacherId: row.teacherId,
     createdAt: row.createdAt,

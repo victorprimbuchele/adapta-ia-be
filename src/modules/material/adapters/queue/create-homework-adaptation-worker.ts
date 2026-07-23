@@ -16,6 +16,7 @@ import { PrismaFileRepository } from "../persistence/prisma-file-repository.js";
 import { PrismaHomeworkRepository } from "../persistence/prisma-homework-repository.js";
 import { LocalObjectStorage } from "../storage/local-object-storage.js";
 import { OpenAiCompatibleAudioGenerator } from "../tts/openai-compatible-audio-generator.js";
+import { PdfKitVariantPdfGenerator } from "../pdf/pdfkit-variant-pdf-generator.js";
 
 /**
  * Cria o worker BullMQ que consome `homework-adaptation` (BE-E5.2–E5.10).
@@ -78,6 +79,7 @@ function createDefaultProcessor(): ProcessHomeworkAdaptation {
     new PrismaLearningProfileRepository(prisma),
     new OpenAiCompatibleTextSimplifier(),
     new OpenAiCompatibleAudioGenerator(),
+    new PdfKitVariantPdfGenerator(),
     new LocalObjectStorage(),
     new PrismaFileRepository(prisma),
   );

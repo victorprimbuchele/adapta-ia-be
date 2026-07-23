@@ -16,22 +16,27 @@ import type {
 import type { FileRepository } from "../ports/file-repository.js";
 import type { HomeworkRepository } from "../ports/homework-repository.js";
 import type { ObjectStoragePort } from "../ports/object-storage.js";
+import type { GeneratedPdf, PdfGeneratorPort } from "../ports/pdf-generator.js";
 import type { TextSimplifierPort } from "../ports/text-simplifier.js";
 import { authorizeHomeworkOwner } from "./authorize-homework-owner.js";
 import { buildVariantSpeechText } from "./build-variant-speech-text.js";
 import { persistVariantAudio } from "./persist-variant-audio.js";
+import { persistVariantPdf } from "./persist-variant-pdf.js";
 import { resolveAdaptationGlossary } from "./resolve-adaptation-glossary.js";
 
 export interface ProcessHomeworkAdaptationResult {
   homework: Homework;
   /** Áudio TTS gerado quando o perfil pede (BE-E5.6); já enviado ao storage em BE-E5.7. */
   audio: GeneratedAudio | null;
+  /** PDF gerado a partir da variante (Épico 6, BE-E6.2). */
+  pdf: GeneratedPdf;
 }
 
 /**
  * Consome um job de adaptação (Épico 5, BE-E5.2–E5.7 / ADR 006).
- * Chama a LLM, persiste a variante, gera TTS quando o perfil pede e
- * faz upload + registro `File` vinculado em `audioFileId`.
+ * Chama a LLM, persiste a variante, gera TTS quando o perfil pede,
+ * faz upload + registro `File` vinculado em `audioFileId` e gera o PDF
+ * adaptado pós-processamento (Épico 6, BE-E6.2).
  */
 export class ProcessHomeworkAdaptation {
   constructor(
@@ -39,6 +44,7 @@ export class ProcessHomeworkAdaptation {
     private readonly learningProfileRepository: LearningProfileRepository,
     private readonly textSimplifier: TextSimplifierPort,
     private readonly audioGenerator: AudioGeneratorPort,
+    private readonly pdfGenerator: PdfGeneratorPort,
     private readonly objectStorage: ObjectStoragePort,
     private readonly fileRepository: FileRepository,
   ) {}
@@ -112,14 +118,31 @@ export class ProcessHomeworkAdaptation {
       });
     }
 
+    const pdf = await this.pdfGenerator.generate({
+      title: variant.title,
+      content: variant.content,
+      question: variant.question,
+      glossary: variant.glossary,
+      profilePrompt,
+    });
+    variant = await persistVariantPdf({
+      objectStorage: this.objectStorage,
+      fileRepository: this.fileRepository,
+      homeworkRepository: this.homeworkRepository,
+      variant,
+      pdf,
+    });
+
     console.log(
       `[adaptation] saved variant=${variant.id} homework=${job.homeworkId} ` +
         `profile=${job.learningProfileId} code=${profilePrompt.code} ` +
         `glossaryEntries=${glossary?.length ?? 0} ` +
         `audioFileId=${variant.audioFileId ?? "none"} ` +
-        `audioBytes=${audio?.data.length ?? 0}`,
+        `contentFileId=${variant.contentFileId ?? "none"} ` +
+        `audioBytes=${audio?.data.length ?? 0} ` +
+        `pdfBytes=${pdf.data.length}`,
     );
 
-    return { homework: variant, audio };
+    return { homework: variant, audio, pdf };
   }
 }

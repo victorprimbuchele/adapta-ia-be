@@ -7,8 +7,9 @@ import type { GlossaryEntry } from "./glossary.js";
  * `learningProfileId` null — BE-E4.7). Always belongs to a class (`classId`).
  * Adapted variants link to the generator (`homeworkId`) and learning
  * profile (`learningProfileId`), may carry a structured `glossary`
- * (Épico 5, BE-E5.5 / BE-E5.4), and may point to TTS audio via
- * `audioFileId` (BE-E5.7). Glossário e áudio nunca existem na geradora
+ * (Épico 5, BE-E5.5 / BE-E5.4), may point to TTS audio via
+ * `audioFileId` (BE-E5.7) and to the adapted PDF via `contentFileId`
+ * (Épico 6, BE-E6.2). Glossário, áudio e PDF nunca existem na geradora
  * — só em variantes (BE-E5.11).
  */
 export interface Homework {
@@ -22,6 +23,7 @@ export interface Homework {
   homeworkId: string | null;
   learningProfileId: string | null;
   audioFileId: string | null;
+  contentFileId: string | null;
   classId: string;
   teacherId: string;
   createdAt: Date;
