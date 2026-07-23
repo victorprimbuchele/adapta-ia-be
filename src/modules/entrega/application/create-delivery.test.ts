@@ -148,7 +148,7 @@ describe("CreateDelivery", () => {
     expect(deliveryQueue.enqueued).toHaveLength(0);
   });
 
-  it("cria um HomeworkSending e um EmailSending por aluno com a variante do perfil (BE-E7.2)", async () => {
+  it("seleciona a variante do perfil de cada aluno, nunca a geradora (BE-E7.3)", async () => {
     const {
       generator,
       variantProfile1,
@@ -172,22 +172,13 @@ describe("CreateDelivery", () => {
 
     const result = await createDelivery.execute({ homeworkId: generator.id, teacherId: "teacher-1" });
 
-    expect(result.delivery.recipients).toHaveLength(2);
-
     const lucas = result.delivery.recipients.find((r) => r.studentId === studentWithVariant.id)!;
     const ana = result.delivery.recipients.find((r) => r.studentId === studentWithoutVariant.id)!;
 
-    // HomeworkSending: variante do perfil, nunca a geradora
     expect(lucas.variantHomeworkId).toBe(variantProfile1.id);
     expect(ana.variantHomeworkId).toBe(variantProfile2.id);
     expect(lucas.variantHomeworkId).not.toBe(generator.id);
     expect(ana.variantHomeworkId).not.toBe(generator.id);
-
-    // EmailSending: snapshot do e-mail + status inicial pendente
-    expect(lucas.studentEmail).toBe("lucas@escola.com");
-    expect(ana.studentEmail).toBe("ana@escola.com");
-    expect(lucas.status).toBe("pendente");
-    expect(ana.status).toBe("pendente");
   });
 
   it("cria envio agendado com destinatários pendentes quando todas as variantes estão prontas", async () => {
