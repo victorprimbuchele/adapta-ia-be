@@ -5,6 +5,9 @@ import { EmailDeliveryError } from "../domain/errors.js";
  */
 export function teacherVisibleDeliveryErrorMessage(error: unknown): string {
   if (error instanceof EmailDeliveryError) {
+    if (!error.retriable) {
+      return error.message;
+    }
     return "Falha ao enviar o e-mail. Tente novamente em instantes.";
   }
 

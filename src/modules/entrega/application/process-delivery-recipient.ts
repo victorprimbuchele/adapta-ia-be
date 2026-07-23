@@ -13,10 +13,8 @@ export interface ProcessDeliveryRecipientInput {
 }
 
 /**
- * Processa o envio de um único destinatário (worker — Épico 7, BE-E7.5):
- * carrega a variante adaptada, monta o e-mail com PDF anexado e link de
- * áudio (quando TTS), e envia via Gmail SMTP. Atualiza o status do
- * destinatário para `enviado`/`falhou` ao final.
+ * Processa o envio de um único destinatário (worker — Épico 7, BE-E7.5 /
+ * BE-E7.8): job isolado na fila; falha aqui não afeta os demais alunos.
  */
 export class ProcessDeliveryRecipient {
   constructor(
