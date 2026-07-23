@@ -200,7 +200,7 @@ describe("CreateDelivery", () => {
     });
   });
 
-  it("seleciona a variante do perfil de cada aluno, nunca a geradora (BE-E7.3)", async () => {
+  it("cada aluno recebe a variante do seu perfil, nunca a geradora (BE-E7.3 / BE-E7.11)", async () => {
     const {
       generator,
       variantProfile1,
