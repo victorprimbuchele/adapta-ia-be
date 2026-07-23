@@ -121,3 +121,42 @@ export class FileNotFoundError extends AppError {
     super(`Arquivo "${fileId}" não encontrado.`, 404, "FILE_NOT_FOUND");
   }
 }
+
+/**
+ * PDF da variante ainda não foi gerado ou não existe (Épico 6, BE-E6.3).
+ */
+export class HomeworkPdfNotFoundError extends AppError {
+  constructor(homeworkId: string) {
+    super(
+      `PDF da homework "${homeworkId}" não está disponível.`,
+      404,
+      "HOMEWORK_PDF_NOT_FOUND",
+    );
+  }
+}
+
+/**
+ * Download de PDF da geradora exige `learningProfileId` na query (Épico 6, BE-E6.3).
+ */
+export class LearningProfileIdRequiredError extends AppError {
+  constructor() {
+    super(
+      "Informe o parâmetro learningProfileId para baixar o PDF de uma variante.",
+      422,
+      "LEARNING_PROFILE_ID_REQUIRED",
+    );
+  }
+}
+
+/**
+ * Não há variante adaptada para o par geradora+perfil (Épico 6, BE-E6.3).
+ */
+export class HomeworkVariantNotFoundError extends AppError {
+  constructor(homeworkId: string, learningProfileId: string) {
+    super(
+      `Nenhuma variante da homework "${homeworkId}" para o perfil "${learningProfileId}".`,
+      404,
+      "HOMEWORK_VARIANT_NOT_FOUND",
+    );
+  }
+}
