@@ -1,7 +1,9 @@
 import { EmailDeliveryError } from "../domain/errors.js";
+import type { GetFile } from "../../material/application/get-file.js";
+import { buildPdfFilename } from "../../material/application/get-homework-variant-pdf.js";
 import type { HomeworkRepository } from "../../material/ports/homework-repository.js";
 import type { DeliveryRepository } from "../ports/delivery-repository.js";
-import type { EmailSenderPort } from "../ports/email-sender.js";
+import type { EmailAttachment, EmailSenderPort } from "../ports/email-sender.js";
 import { renderDeliveryEmail } from "./render-delivery-email.js";
 
 export interface ProcessDeliveryRecipientInput {
@@ -11,14 +13,16 @@ export interface ProcessDeliveryRecipientInput {
 
 /**
  * Processa o envio de um único destinatário (worker — Épico 6, BE-E6.2):
- * carrega a variante adaptada, monta o e-mail e envia via SMTP. Atualiza
- * o status do destinatário para `enviado`/`falhou` ao final.
+ * carrega a variante adaptada, monta o e-mail com o PDF anexado e envia
+ * via SMTP. Atualiza o status do destinatário para `enviado`/`falhou` ao
+ * final.
  */
 export class ProcessDeliveryRecipient {
   constructor(
     private readonly deliveryRepository: DeliveryRepository,
     private readonly homeworkRepository: HomeworkRepository,
     private readonly emailSender: EmailSenderPort,
+    private readonly getFile: GetFile,
   ) {}
 
   async execute(input: ProcessDeliveryRecipientInput): Promise<void> {
@@ -45,6 +49,12 @@ export class ProcessDeliveryRecipient {
       throw new EmailDeliveryError("Variante adaptada não encontrada.", { retriable: false });
     }
 
+    if (!variant.contentFileId) {
+      throw new EmailDeliveryError("Variante adaptada sem PDF gerado.", { retriable: false });
+    }
+
+    const attachment = await this.buildPdfAttachment(variant.contentFileId, variant.title);
+
     const email = renderDeliveryEmail({
       studentName: recipient.studentName,
       homeworkTitle: variant.title,
@@ -53,7 +63,12 @@ export class ProcessDeliveryRecipient {
     });
 
     try {
-      await this.emailSender.send({ to: recipient.studentEmail, subject: email.subject, html: email.html });
+      await this.emailSender.send({
+        to: recipient.studentEmail,
+        subject: email.subject,
+        html: email.html,
+        attachments: [attachment],
+      });
     } catch (error) {
       throw new EmailDeliveryError(
         error instanceof Error ? error.message : "Falha ao enviar o e-mail.",
@@ -65,5 +80,17 @@ export class ProcessDeliveryRecipient {
       sentAt: new Date(),
       failedReason: null,
     });
+  }
+
+  private async buildPdfAttachment(fileId: string, title: string): Promise<EmailAttachment> {
+    try {
+      const { file, data } = await this.getFile.execute(fileId);
+      return { filename: buildPdfFilename(title), content: data, contentType: file.mimeType };
+    } catch (error) {
+      throw new EmailDeliveryError(
+        error instanceof Error ? `Falha ao carregar o PDF da atividade: ${error.message}` : "Falha ao carregar o PDF da atividade.",
+        { retriable: false },
+      );
+    }
   }
 }

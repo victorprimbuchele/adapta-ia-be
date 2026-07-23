@@ -18,7 +18,7 @@ export interface GetHomeworkVariantPdfResult extends GetFileResult {
   filename: string;
 }
 
-function buildPdfFilename(title: string): string {
+export function buildPdfFilename(title: string): string {
   const sanitized = title
     .trim()
     .replace(/[^\w\s\-à-úÀ-Ú]/g, "")
