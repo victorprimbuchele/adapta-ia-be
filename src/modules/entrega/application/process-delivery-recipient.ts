@@ -83,7 +83,9 @@ export class ProcessDeliveryRecipient {
       failedReason: null,
     });
 
-    await finalizeDeliveryIfComplete(input.deliveryId, this.deliveryRepository);
+    await finalizeDeliveryIfComplete(input.deliveryId, this.deliveryRepository, {
+      homeworkRepository: this.homeworkRepository,
+    });
   }
 
   private async buildPdfAttachment(fileId: string, title: string): Promise<EmailAttachment> {

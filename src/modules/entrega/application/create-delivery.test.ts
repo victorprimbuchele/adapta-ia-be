@@ -200,7 +200,7 @@ describe("CreateDelivery", () => {
     });
   });
 
-  it("seleciona a variante do perfil de cada aluno, nunca a geradora (BE-E7.3)", async () => {
+  it("cada aluno recebe a variante do seu perfil, nunca a geradora (BE-E7.3 / BE-E7.11)", async () => {
     const {
       generator,
       variantProfile1,
@@ -267,6 +267,20 @@ describe("CreateDelivery", () => {
     const ana = result.delivery.recipients.find((r) => r.studentId === studentWithoutVariant.id);
     expect(lucas?.variantHomeworkId).toBeTruthy();
     expect(ana?.variantHomeworkId).toBeTruthy();
+
+    const generatorAfterSend = await homeworkRepository.findById(generator.id);
+    expect(generatorAfterSend?.isDraft).toBe(false);
+  });
+
+  it("não altera isDraft quando o envio é bloqueado por variantes incompletas", async () => {
+    const { generator, createDelivery, homeworkRepository } = await buildScenario();
+
+    await expect(
+      createDelivery.execute({ homeworkId: generator.id, teacherId: "teacher-1" }),
+    ).rejects.toMatchObject({ code: "INCOMPLETE_DELIVERY_VARIANTS" });
+
+    const generatorAfterAttempt = await homeworkRepository.findById(generator.id);
+    expect(generatorAfterAttempt?.isDraft).toBe(true);
   });
 
   it("não inclui alunos sem perfil de aprendizagem vinculado", async () => {

@@ -24,7 +24,7 @@ function variant(id: string, learningProfileId: string | null, homeworkId = "gen
   };
 }
 
-describe("resolveDeliveryVariantForProfile (BE-E7.3)", () => {
+describe("resolveDeliveryVariantForProfile (BE-E7.3 / BE-E7.11)", () => {
   const generator = variant("gen-1", null, null);
   const variantP1 = variant("var-p1", "profile-1");
   const variantP2 = variant("var-p2", "profile-2");

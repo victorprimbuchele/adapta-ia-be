@@ -149,4 +149,16 @@ export class InMemoryHomeworkRepository implements HomeworkRepository {
     homework.updatedAt = new Date();
     return homework;
   }
+
+  async publishGenerator(id: string): Promise<Homework> {
+    const homework = this.homeworks.find((item) => item.id === id);
+
+    if (!homework) {
+      throw new Error(`Homework "${id}" not found in memory repository.`);
+    }
+
+    homework.isDraft = false;
+    homework.updatedAt = new Date();
+    return homework;
+  }
 }
